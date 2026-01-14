@@ -1,17 +1,19 @@
 "use client";
-
 import { motion } from "framer-motion";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function Hero() {
+  const { theme } = useTheme();
+
   return (
-    <section className="relative bg-black h-screen overflow-hidden flex flex-col items-center justify-center px-4 sm:px-6 md:px-8">
+    <section className="relative h-screen flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 transition-colors duration-500 bg-white dark:bg-black">
       <div className="text-center max-w-3xl">
         {/* Heading */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="font-extrabold text-white leading-tight whitespace-normal sm:whitespace-nowrap text-3xl sm:text-4xl md:text-5xl lg:text-6xl"
+          className="font-extrabold leading-tight text-4xl sm:text-5xl md:text-6xl text-black dark:text-white transition-colors duration-500"
         >
           Manage Repairs Smartly
         </motion.h1>
@@ -21,24 +23,24 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-gray-300"
+          className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 transition-colors duration-500"
         >
           Track, manage, and complete repairs effortlessly with Repairio – the
           modern solution for repair shops.
         </motion.p>
 
-        {/* Additional tagline / content */}
+        {/* Additional tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-4 sm:mt-6 text-gray-400 text-sm sm:text-base md:text-lg"
+          className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg text-gray-500 dark:text-gray-400 transition-colors duration-500"
         >
           From appointment scheduling to order completion, everything in one
           place for a seamless workflow.
         </motion.p>
 
-        {/* Buttons centered */}
+        {/* Buttons */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -52,8 +54,6 @@ export default function Hero() {
             Learn More
           </a>
         </motion.div>
-
-        {/* Optional: small features row */}
       </div>
     </section>
   );
