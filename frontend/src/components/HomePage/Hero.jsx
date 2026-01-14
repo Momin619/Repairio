@@ -1,10 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
 
 export default function Hero() {
-  const { theme } = useTheme();
-
   return (
     <section className="relative h-screen flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 transition-colors duration-500 bg-white dark:bg-black">
       <div className="text-center max-w-3xl w-full">
