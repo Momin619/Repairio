@@ -10,6 +10,7 @@ import {
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
+import toast from "react-hot-toast"; // ✅ import toast
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -27,14 +28,15 @@ export default function Signup() {
     try {
       delete data.confirmPassword; // remove confirmPassword before sending
       const res = await API.post("/auth/signup", data);
-      alert(res.data.message || "Account created!");
+
+      toast.success(res.data.message || "Account created!"); // ✅ toast
       navigate("/auth/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Signup failed");
+      toast.error(err.response?.data?.message || "Signup failed"); // ❌ toast
     }
   };
 
-  // Common input classes for all states
+  // Common input classes
   const inputClass = `
     pl-10 w-full px-4 py-2 rounded-lg focus:outline-none transition
     text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400
@@ -158,16 +160,15 @@ export default function Signup() {
           </div>
 
           {/* Submit */}
-          {/* Submit */}
           <button
             type="submit"
             disabled={isSubmitting}
             className="
-    w-full py-3 font-semibold rounded-lg
-    bg-black text-white
-    hover:bg-gray-900 dark:bg-white cursor-pointer dark:text-black dark:hover:bg-gray-200
-    transition
-  "
+              w-full py-3 font-semibold rounded-lg
+              bg-black text-white
+              hover:bg-gray-900 dark:bg-white cursor-pointer dark:text-black dark:hover:bg-gray-200
+              transition
+            "
           >
             {isSubmitting ? "Submitting..." : "Sign Up"}
           </button>

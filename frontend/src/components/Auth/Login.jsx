@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
+import toast from "react-hot-toast"; // ✅ import toast
 
 export default function Login() {
   const {
@@ -24,12 +25,19 @@ export default function Login() {
         userId: res.data.userId,
       });
       localStorage.setItem("token", res.data.token);
+
+      toast.success("Login successful!"); // ✅ success toast
       navigate("/dashboard");
     } catch (err) {
       const code = err.response?.data?.code;
-      if (code === "NO_SUBSCRIPTION") navigate("/no-subscription");
-      else if (code === "INACTIVE") alert("Account not approved yet");
-      else alert("Login failed");
+      if (code === "NO_SUBSCRIPTION") {
+        toast.error("You don’t have an active subscription."); // ❌ error toast
+        navigate("/no-subscription");
+      } else if (code === "INACTIVE") {
+        toast.error("Your account is not approved yet.");
+      } else {
+        toast.error("Login failed. Check your credentials.");
+      }
     }
   };
 

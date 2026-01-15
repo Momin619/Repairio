@@ -10,11 +10,11 @@ import NoSubscription from "./components/Auth/NoSubscription";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoutes";
 import Unauthorized from "./components/Auth/Unauthorized";
 import Dashboard from "./components/Auth/Dashboard";
-import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
+import { Toaster } from "react-hot-toast";
 export default function App() {
   return (
     <>
+      <Toaster position="top-center" />
       <Router>
         <Routes>
           {/* Public routes */}
@@ -51,26 +51,6 @@ export default function App() {
           <Route path="*" element={<LoginPage />} />
         </Routes>
       </Router>
-      <ToastContainer
-        position="top-center"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        toastStyle={{
-          backgroundColor: "#fff",
-          color: "#000",
-          borderRadius: "12px",
-          padding: "12px 16px",
-          fontSize: "clamp(0.8rem, 2.5vw, 1rem)", // Responsive font size
-          maxWidth: "90vw", // Prevents overflow on small screens
-        }}
-        bodyClassName="flex items-center justify-center"
-      />
     </>
   );
 }

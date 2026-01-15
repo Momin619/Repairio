@@ -25,6 +25,7 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email }).populate("subscription");
     if (!user) return res.status(401).json({ code: "INVALID" });
 
+    // FIX: await bcrypt.compare
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ code: "INVALID" });
 
