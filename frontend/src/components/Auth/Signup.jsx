@@ -11,6 +11,7 @@ import {
   FaEyeSlash,
 } from "react-icons/fa";
 import toast from "react-hot-toast"; // ✅ import toast
+import { Link } from "react-router-dom";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -177,12 +178,12 @@ export default function Signup() {
         {/* Redirect */}
         <p className="text-center cursor-pointer text-sm text-gray-600 dark:text-gray-300 mt-6">
           Already have an account?{" "}
-          <a
-            href="/login"
+          <Link
+            to="/login"
             className="text-black dark:text-white hover:underline font-medium"
           >
             Login here
-          </a>
+          </Link>
         </p>
       </div>
     </div>

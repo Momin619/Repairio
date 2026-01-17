@@ -4,7 +4,6 @@ import Navbar from "../../components/ui/Navbar";
 export default function SignupPage() {
   return (
     <div>
-      <Navbar />
       <SignUp />
     </div>
   );

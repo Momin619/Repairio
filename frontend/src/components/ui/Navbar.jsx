@@ -4,6 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
+  console.log("Navbar theme:", theme);
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur border-b border-gray-300 dark:border-gray-700 transition-colors duration-500">

@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 import toast from "react-hot-toast"; // ✅ import toast
-
+import { Link } from "react-router-dom";
 export default function Login() {
   const {
     register,
@@ -115,12 +115,12 @@ export default function Login() {
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-6">
           Don’t have an account?{" "}
-          <a
-            href="/signup"
+          <Link
+            to="/signup"
             className="text-black dark:text-white hover:underline font-medium"
           >
             Sign Up
-          </a>
+          </Link>
         </p>
       </div>
     </div>
