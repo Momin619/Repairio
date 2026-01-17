@@ -1,14 +1,17 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-import LoginPage from "./pages/Auth/LoginPage";
-import SignupPage from "./pages/Auth/SignupPage";
-import Dashboard from "./components/Auth/Dashboard";
-import ActivateSubscription from "./components/Auth/ActivateSubscription";
-import NoSubscription from "./components/Auth/NoSubscription";
-import Unauthorized from "./components/Auth/Unauthorized";
-import { ProtectedRoute } from "./components/Auth/ProtectedRoutes";
+import LoginPage from "./pages/Auth/User/LoginPage";
+import SignupPage from "./pages/Auth/User/SignupPage";
+import Dashboard from "./components/dashboard/User/Dashboard";
+import ActivateSubscription from "./components/dashboard/User/ActivateSubscription";
+import NoSubscription from "./components/ui/ErrorPages/NoSubscription";
+import Unauthorized from "./components/ui/ErrorPages/Unauthorized";
+import { ProtectedRoute } from "./components/Auth/User/ProtectedRoutes";
 import Navbar from "./components/ui/Navbar";
+import AdminLoginPage from "./pages/Auth/Admin/AdminLoginPage";
+import AdminSingupPage from "./pages/Auth/Admin/AdminSignupPage";
+import AdminDashboardPage from "./pages/Dashboard/Admin/AdminDashboardPage";
 import "./styles/output.css";
 import "./styles/app.css";
 export default function App() {
@@ -33,15 +36,10 @@ export default function App() {
         />
 
         {/* Admin-only route */}
-        <Route
-          path="/admin/activate"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <ActivateSubscription />
-            </ProtectedRoute>
-          }
-        />
 
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/singup" element={<AdminSingupPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         {/* No subscription */}
         <Route path="/no-subscription" element={<NoSubscription />} />
 

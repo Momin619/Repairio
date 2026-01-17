@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
-import API from "../../api/api";
+import API from "../../../api/api";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 import toast from "react-hot-toast"; // ✅ import toast
@@ -23,8 +23,12 @@ export default function Login() {
         token: res.data.token,
         role: res.data.role,
         userId: res.data.userId,
+        isLoggedIn: res.data.isLoggedIn,
       });
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("isLoggedIn", res.data.isLoggedIn);
+      localStorage.setItem("role", res.data.role);
+      localStorage.setItem("userId", res.data.userId);
 
       toast.success("Login successful!"); // ✅ success toast
       navigate("/dashboard");

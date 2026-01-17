@@ -5,8 +5,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
     token: localStorage.getItem("token") || null,
-    role: null,
-    userId: null,
+    role: localStorage.getItem("userRole") || null,
+    userId: localStorage.getItem("userId") || null,
+    isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
   });
 
   // Attach token to axios globally
