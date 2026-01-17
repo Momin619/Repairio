@@ -25,10 +25,6 @@ export default function Login() {
         userId: res.data.userId,
         isLoggedIn: res.data.isLoggedIn,
       });
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("isLoggedIn", res.data.isLoggedIn);
-      localStorage.setItem("role", res.data.role);
-      localStorage.setItem("userId", res.data.userId);
 
       toast.success("Login successful!"); // ✅ success toast
       navigate("/dashboard");
@@ -46,16 +42,16 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4 dark:bg-black">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-6">
+    <div className="flex items-center justify-center min-h-screen px-4 bg-gray-100 dark:bg-black">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg dark:bg-gray-900 rounded-2xl">
+        <h2 className="mb-6 text-3xl font-bold text-center text-gray-900 dark:text-white">
           Login
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Email */}
           <div className="relative">
-            <FaEnvelope className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaEnvelope className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type="email"
               {...register("email", { required: "Email is required" })}
@@ -68,7 +64,7 @@ export default function Login() {
                 }`}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.email.message}
               </p>
             )}
@@ -76,7 +72,7 @@ export default function Login() {
 
           {/* Password */}
           <div className="relative">
-            <FaLock className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaLock className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type={showPassword ? "text" : "password"}
               {...register("password", { required: "Password is required" })}
@@ -96,7 +92,7 @@ export default function Login() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.password.message}
               </p>
             )}
@@ -106,22 +102,17 @@ export default function Login() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="
-              w-full py-3 font-semibold rounded-lg
-              bg-black text-white
-              hover:bg-gray-900 dark:bg-white cursor-pointer dark:text-black dark:hover:bg-gray-200
-              transition
-            "
+            className="w-full py-3 font-semibold text-white transition bg-black rounded-lg cursor-pointer hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200"
           >
             {isSubmitting ? "Submitting..." : "Login"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-6">
+        <p className="mt-6 text-sm text-center text-gray-600 dark:text-gray-300">
           Don’t have an account?{" "}
           <Link
             to="/signup"
-            className="text-black dark:text-white hover:underline font-medium"
+            className="font-medium text-black dark:text-white hover:underline"
           >
             Sign Up
           </Link>

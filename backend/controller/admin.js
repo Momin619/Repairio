@@ -56,11 +56,12 @@ export const adminLogin = async (req, res) => {
     if (!match) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+    console.log(admin);
 
     res.json({
       token: generateToken(admin._id),
       role: "admin",
-      adminId: admin._id,
+      userId: admin._id,
       isLoggedIn: true,
     });
   } catch (err) {

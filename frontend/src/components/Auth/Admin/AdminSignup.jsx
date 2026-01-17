@@ -1,13 +1,13 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { useAdminAuth } from "../../../context/AdminAuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
 
 export default function AdminSignup() {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
-  const { setAuth } = useAdminAuth();
+  const { setAuth } = useAuth();
 
   const onSubmit = async (data) => {
     try {
@@ -19,11 +19,6 @@ export default function AdminSignup() {
         userId: res.data.adminId,
         isLoggedIn: true,
       });
-
-      localStorage.setItem("adminToken", res.data.token);
-      localStorage.setItem("adminId", res.data.adminId);
-      localStorage.setItem("adminLoggedIn", "true");
-      localStorage.setItem("adminRole", res.data.role);
 
       toast.success("Admin created successfully!");
       navigate("/admin/dashboard");

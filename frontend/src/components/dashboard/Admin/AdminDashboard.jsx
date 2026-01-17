@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useAdminAuth } from "../../../context/AdminAuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
-  const { auth } = useAdminAuth();
+  const { auth } = useAuth();
   const [users, setUsers] = useState([]);
 
   const fetchUsers = async () => {

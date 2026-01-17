@@ -1,27 +1,23 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { useAdminAuth } from "../../../context/AdminAuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import API from "../../../api/api"; // axios instance
 import toast from "react-hot-toast";
 
 export default function AdminLogin() {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
-  const { setAuth } = useAdminAuth();
+  const { setAuth } = useAuth();
 
   const onSubmit = async (data) => {
     try {
       const res = await API.post("/admin/login", data);
       setAuth({
         token: res.data.token,
-        role: res.data.role,
+        role: "admin",
         userId: res.data.userId,
         isLoggedIn: res.data.isLoggedIn,
       });
-      localStorage.setItem("adminToken", res.data.token);
-      localStorage.setItem("adminRole", res.data.role);
-      localStorage.setItem("adminId", res.data.userId);
-      localStorage.setItem("adminLoggedIn", res.data.isLoggedIn);
 
       toast.success("Admin login successful!");
       navigate("/admin/dashboard");
