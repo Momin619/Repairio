@@ -11,7 +11,7 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm({ mode: "onChange" });
   const navigate = useNavigate();
   const { setAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -54,17 +54,19 @@ export default function Login() {
             <FaEnvelope className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type="email"
-              {...register("email", { required: "Email is required" })}
               placeholder="Email"
-              className={`pl-10 w-full px-4 py-2 rounded-lg focus:outline-none transition
-                ${
-                  errors.email
-                    ? "border border-red-500 focus:ring-2 focus:ring-red-400 text-white placeholder-gray-300 dark:text-white dark:placeholder-gray-400"
-                    : "border border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                }`}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // strict email regex
+                  message: "Please enter a valid email address",
+                },
+              })}
+              className={`pl-10 w-full px-4 py-2 rounded-lg focus:outline-none border
+    ${errors.email ? "border-red-500 focus:ring-2 focus:ring-red-400 text-red-900 dark:text-red-400" : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"}`}
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-500">
+              <p className="mt-1 text-sm text-red-500 dark:text-red-400">
                 {errors.email.message}
               </p>
             )}
