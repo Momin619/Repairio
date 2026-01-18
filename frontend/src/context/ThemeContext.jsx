@@ -1,35 +1,3 @@
-// "use client";
-// import { createContext, useState, useContext, useEffect } from "react";
-
-// const ThemeContext = createContext();
-
-// export function ThemeProvider({ children }) {
-//   const [theme, setTheme] = useState("dark"); // default theme
-
-//   // Optional: save preference in localStorage
-//   useEffect(() => {
-//     const saved = localStorage.getItem("theme");
-//     if (saved) setTheme(saved);
-//   }, []);
-
-//   useEffect(() => {
-//     document.documentElement.classList.remove("light", "dark");
-//     document.documentElement.classList.add(theme);
-//     localStorage.setItem("theme", theme);
-//   }, [theme]);
-
-//   const toggleTheme = () => {
-//     setTheme(theme === "dark" ? "light" : "dark");
-//   };
-
-//   return (
-//     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-//       {children}
-//     </ThemeContext.Provider>
-//   );
-// }
-
-// export const useTheme = () => useContext(ThemeContext);
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -41,8 +9,8 @@ export function ThemeProvider({ children }) {
   });
 
   useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
     localStorage.setItem("theme", theme);
   }, [theme]);
 

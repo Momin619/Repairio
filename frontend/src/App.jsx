@@ -4,14 +4,15 @@ import { Toaster } from "react-hot-toast";
 import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
 import Dashboard from "./components/dashboard/User/Dashboard";
-import ActivateSubscription from "./components/dashboard/User/ActivateSubscription";
 import NoSubscription from "./components/ui/ErrorPages/NoSubscription";
+import NotFound from "./components/ui/ErrorPages/NotFound";
 import Unauthorized from "./components/ui/ErrorPages/Unauthorized";
 import { ProtectedRoute } from "./components/Auth/User/ProtectedRoutes";
 import Navbar from "./components/ui/Navbar";
 import AdminLoginPage from "./pages/Auth/Admin/AdminLoginPage";
 import AdminSingupPage from "./pages/Auth/Admin/AdminSignupPage";
 import AdminDashboardPage from "./pages/Dashboard/Admin/AdminDashboardPage";
+import HomePage from "./pages/Home/HomePage";
 import "./styles/output.css";
 import "./styles/app.css";
 export default function App() {
@@ -24,7 +25,7 @@ export default function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-
+        <Route path="/" element={<HomePage />} />
         {/* Protected routes */}
         <Route
           path="/dashboard"
@@ -47,7 +48,7 @@ export default function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Fallback */}
-        <Route path="*" element={<LoginPage />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
+import {
+  FaCheckCircle,
+  FaTimesCircle,
+  FaUserCheck,
+  FaUserClock,
+} from "react-icons/fa";
 
 export default function AdminDashboard() {
   const { auth } = useAuth();
@@ -13,7 +19,7 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${auth.token}` },
       });
       setUsers(res.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch users");
     }
   };
@@ -23,12 +29,10 @@ export default function AdminDashboard() {
       const res = await API.post(
         `/admin/approve/${userId}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${auth.token}` },
-        },
+        { headers: { Authorization: `Bearer ${auth.token}` } },
       );
       toast.success(res.data.message);
-      fetchUsers(); // refresh list
+      fetchUsers();
     } catch (err) {
       toast.error(err.response?.data?.message || "Approval failed");
     }
@@ -40,45 +44,85 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 dark:bg-black">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+      {/* Header */}
+      <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
         Admin Dashboard
       </h1>
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-400">
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Email</th>
-            <th className="px-4 py-2">Active</th>
-            <th className="px-4 py-2">Subscription</th>
-            <th className="px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr
-              key={u._id}
-              className="border-b border-gray-300 dark:border-gray-700"
-            >
-              <td className="px-4 py-2">{u.name}</td>
-              <td className="px-4 py-2">{u.email}</td>
-              <td className="px-4 py-2">{u.isActive ? "Yes" : "No"}</td>
-              <td className="px-4 py-2">
-                {u.subscription ? "Active" : "None"}
-              </td>
-              <td className="px-4 py-2">
-                {!u.isActive && (
-                  <button
-                    onClick={() => approveUser(u._id)}
-                    className="px-2 py-1 text-white bg-green-500 rounded-lg"
-                  >
-                    Approve
-                  </button>
-                )}
-              </td>
+
+      {/* Table Card */}
+      <div className="overflow-x-auto bg-white shadow-xl dark:bg-gray-900 rounded-2xl">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 dark:bg-gray-800">
+            <tr className="text-gray-700 dark:text-gray-300">
+              <th className="px-6 py-4 text-left">User</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Subscription</th>
+              <th className="px-6 py-4 text-center">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {users.map((u) => (
+              <tr
+                key={u._id}
+                className="transition border-t border-gray-200  dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                {/* User Info */}
+                <td className="px-6 py-4">
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {u.name}
+                  </div>
+                  <div className="text-xs text-gray-500">{u.email}</div>
+                </td>
+
+                {/* Active Status */}
+                <td className="px-6 py-4">
+                  {u.isActive ? (
+                    <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                      <FaCheckCircle /> Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2 text-yellow-500">
+                      <FaUserClock /> Pending
+                    </span>
+                  )}
+                </td>
+
+                {/* Subscription */}
+                <td className="px-6 py-4">
+                  {u.subscription ? (
+                    <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <FaCheckCircle /> Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2 text-red-500">
+                      <FaTimesCircle /> None
+                    </span>
+                  )}
+                </td>
+
+                {/* Action */}
+                <td className="px-6 py-4 text-center">
+                  {!u.isActive && (
+                    <button
+                      onClick={() => approveUser(u._id)}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition bg-green-600 rounded-lg  hover:bg-green-500 hover:shadow-lg hover:shadow-green-500/30"
+                    >
+                      <FaUserCheck />
+                      Approve
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Empty state */}
+        {users.length === 0 && (
+          <div className="p-6 text-center text-gray-500">No users found</div>
+        )}
+      </div>
     </div>
   );
 }

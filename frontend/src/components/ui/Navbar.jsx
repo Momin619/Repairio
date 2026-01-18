@@ -9,44 +9,55 @@ export default function Navbar() {
   const { auth, logout } = useAuth();
 
   const isLoggedIn = auth.isLoggedIn;
-  const isAdmin = auth.role === "admin"; // check if logged in user is admin
+  const isAdmin = auth.role === "admin";
 
   return (
-    <nav className="sticky top-0 z-50 transition-colors duration-500 border-b border-gray-300 bg-white/80 dark:bg-black/80 backdrop-blur dark:border-gray-700">
-      <div className="flex items-center justify-between h-16 px-6 mx-auto max-w-7xl">
+    <nav
+      className={`sticky top-0 z-50 backdrop-blur transition-colors duration-500 border-b ${
+        theme === "dark"
+          ? "bg-black/90 border-gray-700 text-white"
+          : "bg-white/90 border-gray-300 text-black"
+      }`}
+    >
+      <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl sm:px-6">
         {/* Logo */}
-        <div className="flex items-center gap-2 font-semibold text-black transition-colors duration-500 dark:text-white">
-          <FiTool className="text-2xl text-blue-500 animate-pulse" />
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white"
+        >
+          <FiTool className="text-2xl text-blue-500" />
           Repairio
-        </div>
+        </Link>
 
-        {/* Menu + Theme Button */}
-        <div className="flex items-center gap-6 text-sm transition-colors duration-500">
+        {/* Menu */}
+        <div className="flex items-center gap-3 text-sm font-medium sm:gap-5">
+          {/* Links */}
           <Link
             to="/features"
-            className="transition-colors duration-300 hover:text-blue-500 dark:hover:text-blue-400"
+            className="px-2 py-1 text-gray-700 rounded-md dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             Features
           </Link>
+
           <Link
             to="/how"
-            className="transition-colors duration-300 hover:text-blue-500 dark:hover:text-blue-400"
+            className="px-2 py-1 text-gray-700 rounded-md dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             How it works
           </Link>
 
-          {/* Auth Buttons */}
+          {/* Auth */}
           {!isLoggedIn ? (
             <>
               <Link
                 to="/login"
-                className="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-400"
+                className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-500"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-400"
+                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-500"
               >
                 Signup
               </Link>
@@ -55,13 +66,13 @@ export default function Navbar() {
             <>
               <Link
                 to={isAdmin ? "/admin/dashboard" : "/dashboard"}
-                className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-400"
+                className="px-4 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-500"
               >
-                {isAdmin ? "Admin Dashboard" : "Profile"}
+                {isAdmin ? "Admin" : "Profile"}
               </Link>
               <button
                 onClick={logout}
-                className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-400"
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-500"
               >
                 Logout
               </button>
@@ -71,7 +82,8 @@ export default function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 ml-2 text-gray-800 bg-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-200"
+            className="p-2 text-gray-800 transition bg-gray-200 rounded-lg  dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? <FiSun /> : <FiMoon />}
           </button>

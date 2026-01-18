@@ -1,7 +1,11 @@
 /* Base font for body and paragraphs */
 body {
   margin: 0;
-  font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont,
+  font-family:
+    "Roboto",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
     sans-serif;
   background: #f6f6f6;
   color: #111;
@@ -19,10 +23,14 @@ button {
   font-family: "Roboto", sans-serif;
 }
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 * {
-  transition: background-color 0.3s ease, color 0.3s ease,
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
     border-color 0.3s ease;
 }

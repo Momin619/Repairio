@@ -7,7 +7,6 @@ import Footer from "../ui/Footer";
 export default function Home() {
   return (
     <div className="overflow-x-hidden">
-      <Navbar />
       <Hero />
       <Features />
       <HowItWorks />
