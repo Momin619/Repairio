@@ -13,6 +13,7 @@ import AdminLoginPage from "./pages/Auth/Admin/AdminLoginPage";
 import AdminSingupPage from "./pages/Auth/Admin/AdminSignupPage";
 import AdminDashboardPage from "./pages/Dashboard/Admin/AdminDashboardPage";
 import HomePage from "./pages/Home/HomePage";
+import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
 import "./styles/output.css";
 import "./styles/app.css";
 export default function App() {
@@ -30,17 +31,31 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={"user"}>
               <Dashboard />
             </ProtectedRoute>
           }
         />
 
         {/* Admin-only route */}
-
+        <Route
+          path="/user/:userId"
+          element={
+            <ProtectedRoute allowedRoles={"admin"}>
+              <AdminUserDetailsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin/singup" element={<AdminSingupPage />} />
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={"admin"}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
         {/* No subscription */}
         <Route path="/no-subscription" element={<NoSubscription />} />
 

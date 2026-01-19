@@ -3,10 +3,32 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    name: String,
-    shopName: String,
-    email: { type: String, unique: true },
-    password: String,
+    name: {
+      type: String,
+      required: true,
+    },
+
+    shopName: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+
+    phoneNumber: {
+      type: String,
+      required: true,
+      match: [/^[0-9]{10,15}$/, "Invalid phone number"], // 🔒 validation
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
 
     role: {
       type: String,
@@ -16,7 +38,7 @@ const userSchema = new mongoose.Schema(
 
     isActive: {
       type: Boolean,
-      default: false, // admin approval
+      default: false,
     },
 
     subscription: {

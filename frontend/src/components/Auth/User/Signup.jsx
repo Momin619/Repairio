@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast"; // ✅ import toast
 import { Link } from "react-router-dom";
+import { FaPhone } from "react-icons/fa";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function Signup() {
       const res = await API.post("/auth/signup", data);
 
       toast.success(res.data.message || "Account created!"); // ✅ toast
-      navigate("/auth/login");
+      navigate("/login");
     } catch (err) {
       toast.error(err.response?.data?.message || "Signup failed"); // ❌ toast
     }
@@ -51,30 +52,37 @@ export default function Signup() {
   `;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-6">
+    <div className="flex items-center justify-center min-h-screen px-4 bg-gray-100 dark:bg-black">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg dark:bg-gray-900 rounded-2xl">
+        <h2 className="mb-6 text-3xl font-bold text-center text-gray-900 dark:text-white">
           Create Account
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Full Name */}
           <div className="relative">
-            <FaUser className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaUser className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type="text"
               placeholder="Full Name"
-              {...register("name", { required: "Full Name is required" })}
+              {...register("name", {
+                required: "Full name is required",
+                minLength: {
+                  value: 5,
+                  message: "Name must be at least 5 characters",
+                },
+              })}
               className={errors.name ? errorInputClass : inputClass}
             />
+
             {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
             )}
           </div>
 
           {/* Shop Name */}
           <div className="relative">
-            <FaStore className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaStore className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type="text"
               placeholder="Shop Name"
@@ -82,7 +90,7 @@ export default function Signup() {
               className={errors.shopName ? errorInputClass : inputClass}
             />
             {errors.shopName && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.shopName.message}
               </p>
             )}
@@ -90,35 +98,66 @@ export default function Signup() {
 
           {/* Email */}
           <div className="relative">
-            <FaEnvelope className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaEnvelope className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type="email"
               placeholder="Email"
               {...register("email", {
                 required: "Email is required",
-                pattern: { value: /^\S+@\S+$/i, message: "Invalid email" },
+                pattern: {
+                  value: /^\S+@\S+\.\S+$/,
+                  message: "Enter a valid email address",
+                },
               })}
               className={errors.email ? errorInputClass : inputClass}
             />
+
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.email.message}
+              </p>
+            )}
+          </div>
+          {/* Phone Number */}
+          <div className="relative">
+            <FaPhone className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
+            <input
+              type="tel"
+              placeholder="Phone Number (WhatsApp no only)"
+              {...register("phoneNumber", {
+                required: "Mobile number is required",
+                pattern: {
+                  value: /^[0-9]{10,15}$/,
+                  message: "Phone number must be 10–15 digits",
+                },
+              })}
+              className={errors.phoneNumber ? errorInputClass : inputClass}
+            />
+
+            {errors.phoneNumber && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.phoneNumber.message}
               </p>
             )}
           </div>
 
           {/* Password */}
           <div className="relative">
-            <FaLock className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaLock className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               {...register("password", {
                 required: "Password is required",
-                minLength: { value: 6, message: "At least 6 characters" },
+                pattern: {
+                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/,
+                  message:
+                    "Password must include uppercase, lowercase, number & special character",
+                },
               })}
               className={errors.password ? errorInputClass : inputClass}
             />
+
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
@@ -127,7 +166,7 @@ export default function Signup() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.password.message}
               </p>
             )}
@@ -135,17 +174,18 @@ export default function Signup() {
 
           {/* Confirm Password */}
           <div className="relative">
-            <FaLock className="absolute left-3 top-3 text-gray-400 dark:text-gray-300" />
+            <FaLock className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />
             <input
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm Password"
               {...register("confirmPassword", {
-                required: "Please confirm password",
+                required: "Please confirm your password",
                 validate: (value) =>
                   value === watch("password") || "Passwords do not match",
               })}
               className={errors.confirmPassword ? errorInputClass : inputClass}
             />
+
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
@@ -154,7 +194,7 @@ export default function Signup() {
               {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
             {errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.confirmPassword.message}
               </p>
             )}
@@ -164,23 +204,18 @@ export default function Signup() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="
-              w-full py-3 font-semibold rounded-lg
-              bg-black text-white
-              hover:bg-gray-900 dark:bg-white cursor-pointer dark:text-black dark:hover:bg-gray-200
-              transition
-            "
+            className="w-full py-3 font-semibold text-white transition bg-black rounded-lg cursor-pointer hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200"
           >
             {isSubmitting ? "Submitting..." : "Sign Up"}
           </button>
         </form>
 
         {/* Redirect */}
-        <p className="text-center cursor-pointer text-sm text-gray-600 dark:text-gray-300 mt-6">
+        <p className="mt-6 text-sm text-center text-gray-600 cursor-pointer dark:text-gray-300">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-black dark:text-white hover:underline font-medium"
+            className="font-medium text-black dark:text-white hover:underline"
           >
             Login here
           </Link>

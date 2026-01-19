@@ -63,8 +63,15 @@ export default function Login() {
                 },
               })}
               className={`pl-10 w-full px-4 py-2 rounded-lg focus:outline-none border
-    ${errors.email ? "border-red-500 focus:ring-2 focus:ring-red-400 text-red-900 dark:text-red-400" : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"}`}
+    ${
+      errors.email
+        ? "border-red-500 focus:ring-2 focus:ring-red-400 dark:border-red-500 dark:focus:ring-red-400"
+        : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400"
+    }
+    text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400
+  `}
             />
+
             {errors.email && (
               <p className="mt-1 text-sm text-red-500 dark:text-red-400">
                 {errors.email.message}
@@ -79,13 +86,16 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               {...register("password", { required: "Password is required" })}
               placeholder="Password"
-              className={`pl-10 pr-10 w-full px-4 py-2 rounded-lg focus:outline-none transition
-                ${
-                  errors.password
-                    ? "border border-red-500 focus:ring-2 focus:ring-red-400 text-white placeholder-gray-300 dark:text-white dark:placeholder-gray-400"
-                    : "border border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                }`}
+              className={`pl-10 pr-10 w-full px-4 py-2 rounded-lg focus:outline-none border
+    ${
+      errors.password
+        ? "border-red-500 focus:ring-2 focus:ring-red-400 dark:border-red-500 dark:focus:ring-red-400"
+        : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400"
+    }
+    text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400
+  `}
             />
+
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
