@@ -68,7 +68,7 @@ export default function Login() {
         ? "border-red-500 focus:ring-2 focus:ring-red-400 dark:border-red-500 dark:focus:ring-red-400"
         : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400"
     }
-    text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400
+    text-gray-900 dark:text-white placeholder-black dark:placeholder-white
   `}
             />
 
@@ -92,7 +92,7 @@ export default function Login() {
         ? "border-red-500 focus:ring-2 focus:ring-red-400 dark:border-red-500 dark:focus:ring-red-400"
         : "border-gray-300 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:focus:ring-gray-400"
     }
-    text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400
+    text-gray-900 dark:text-white placeholder-black dark:placeholder-white
   `}
             />
 

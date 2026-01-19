@@ -1,7 +1,11 @@
 import express from "express";
 import { adminSignup, adminLogin, getUser } from "../controller/admin.js";
 
-import { listUsers, approveUser } from "../controller/adminUserManagment.js";
+import {
+  listUsers,
+  createSubscription,
+  updateSubscription,
+} from "../controller/adminUserManagment.js";
 import { protect, isAdmin } from "../middlewares/auth.js";
 
 const adminRouter = express.Router();
@@ -12,7 +16,19 @@ adminRouter.post("/login", adminLogin);
 
 // Admin dashboard routes (protected)
 adminRouter.get("/users", protect, isAdmin, listUsers); // list all sellers
-adminRouter.post("/approve/:userId", protect, isAdmin, approveUser); // approve & activate
+adminRouter.post(
+  "/create-subscription/:userId",
+  protect,
+  isAdmin,
+  createSubscription,
+); // approve & activate
+
+adminRouter.post(
+  "/update-subscription/:userId",
+  protect,
+  isAdmin,
+  updateSubscription,
+);
 adminRouter.get("/user/:userId", protect, isAdmin, getUser);
 
 export default adminRouter;
