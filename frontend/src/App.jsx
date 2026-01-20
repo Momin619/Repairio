@@ -16,6 +16,7 @@ import HomePage from "./pages/Home/HomePage";
 import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
 import "./styles/output.css";
 import "./styles/app.css";
+import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
 export default function App() {
   return (
     <>
@@ -23,6 +24,7 @@ export default function App() {
       <Toaster position="top-center" />
 
       <Routes>
+        <Route path="/subscription-expired" element={<SubscriptionExpired />} />
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />

@@ -13,7 +13,6 @@ export const listUsers = async (req, res) => {
   }
 };
 
-// Approve seller + activate subscription
 export const createSubscription = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -24,8 +23,7 @@ export const createSubscription = async (req, res) => {
     }
 
     const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + 30); // 30-day initial subscription
+    const endDate = new Date(startDate.getTime() + 5 * 60 * 1000);
 
     const subscription = await Subscription.create({
       user: user._id,
@@ -66,6 +64,46 @@ export const updateSubscription = async (req, res) => {
     await subscription.save();
 
     res.json({ message: "Subscription extended by 30 days", subscription });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const checkSubscription = async (req, res, next) => {
+  console.log("called dashboard controller");
+
+  try {
+    const user = req.user; // comes from protect middleware
+    console.log(user);
+
+    if (!user.subscription) {
+      return res.status(403).json({
+        message: "No active subscription. Please contact admin.",
+      });
+    }
+
+    const subscription = await Subscription.findById(user.subscription);
+
+    if (!subscription) {
+      return res.status(403).json({
+        message: "Subscription not found",
+      });
+    }
+
+    const now = new Date();
+
+    if (subscription.endDate < now) {
+      subscription.status = "expired";
+      await subscription.save();
+
+      return res.status(403).json({
+        message: "Subscription has expired",
+      });
+    }
+
+    // ✅ subscription valid
+    req.subscription = subscription;
+    next();
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

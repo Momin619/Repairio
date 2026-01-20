@@ -13,33 +13,43 @@ export const protect = async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ message: "Not authorized" });
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ADMIN TOKEN
+    // ADMIN
     if (decoded.role === "admin") {
-      req.admin = await Admin.findById(decoded.id).select("-password");
-      if (!req.admin) {
+      const admin = await Admin.findById(decoded.id).select("-password");
+
+      if (!admin) {
         return res.status(401).json({ message: "Admin not found" });
       }
+
+      req.admin = admin;
+      req.role = "admin";
     }
-    // USER TOKEN
+
+    // USER (seller / customer)
     else {
-      req.user = await User.findById(decoded.id).select("-password");
-      if (!req.user) {
+      const user = await User.findById(decoded.id)
+        .select("-password")
+        .populate("subscription");
+
+      if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
+
+      req.user = user;
+      req.role = user.role;
     }
 
     next();
   } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
-
 export const isAdmin = (req, res, next) => {
   if (!req.admin) {
     return res.status(403).json({ message: "Admin access only" });
