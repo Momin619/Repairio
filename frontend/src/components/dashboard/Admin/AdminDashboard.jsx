@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import API from "../../../api/api";
+import API, { setToken } from "../../../api/api";
 import toast from "react-hot-toast";
 import UsersTable from "@/components/ui/Tabel/UsersTable";
 import Loader from "@/components/ui/Loader";
@@ -12,9 +12,8 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/admin/users", {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
+      setToken(auth.token);
+      const res = await API.get("/admin/users");
       setUsers(res.data);
     } catch {
       toast.error("Failed to fetch users");

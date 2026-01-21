@@ -17,39 +17,48 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // decode first WITHOUT verification to know role
+    const decodedUnverified = jwt.decode(token);
+    if (!decodedUnverified) throw new Error("Invalid token");
 
-    // ADMIN
-    if (decoded.role === "admin") {
-      const admin = await Admin.findById(decoded.id).select("-password");
-
-      if (!admin) {
-        return res.status(401).json({ message: "Admin not found" });
-      }
-
-      req.admin = admin;
-      req.role = "admin";
+    // pick secret based on role
+    let secret;
+    switch (decodedUnverified.role) {
+      case "admin":
+        secret = process.env.JWT_SECRET_ADMIN;
+        break;
+      case "seller":
+        secret = process.env.JWT_SECRET_SELLER;
+        break;
+      default:
+        return res.status(401).json({ message: "Invalid role in token" });
     }
 
-    // USER (seller / customer)
-    else {
+    // now verify token with role-specific secret
+    const decoded = jwt.verify(token, secret);
+
+    // attach user/admin to request
+    if (decoded.role === "admin") {
+      const admin = await Admin.findById(decoded.id).select("-password");
+      if (!admin) return res.status(401).json({ message: "Admin not found" });
+      req.admin = admin;
+      req.role = "admin";
+    } else {
       const user = await User.findById(decoded.id)
         .select("-password")
         .populate("subscription");
-
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
+      if (!user) return res.status(401).json({ message: "User not found" });
       req.user = user;
-      req.role = user.role;
+      req.role = decoded.role;
     }
 
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.log(err);
+    return res.status(401).json({ message: "Token invalid or expired" });
   }
 };
+
 export const isAdmin = (req, res, next) => {
   if (!req.admin) {
     return res.status(403).json({ message: "Admin access only" });

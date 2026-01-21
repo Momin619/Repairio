@@ -23,7 +23,7 @@ export const createSubscription = async (req, res) => {
     }
 
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 5 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 1000);
 
     const subscription = await Subscription.create({
       user: user._id,

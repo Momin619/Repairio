@@ -49,7 +49,7 @@ export default function App() {
           }
         />
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin/singup" element={<AdminSingupPage />} />
+        <Route path="/admin/signup" element={<AdminSingupPage />} />
         <Route
           path="/admin/dashboard"
           element={

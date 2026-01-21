@@ -1,14 +1,10 @@
 import Admin from "../model/admin.js";
 
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../model/user.js";
-const generateToken = (id) => {
-  return jwt.sign({ id, role: "admin" }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
 
+import User from "../model/user.js";
+
+import { generateToken } from "../utils/generateToken.js";
 export const adminSignup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -52,7 +48,7 @@ export const adminLogin = async (req, res) => {
     console.log(admin);
 
     res.json({
-      token: generateToken(admin._id),
+      token: generateToken(admin),
       role: "admin",
       userId: admin._id,
       isLoggedIn: true,
