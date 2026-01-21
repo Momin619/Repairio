@@ -34,9 +34,7 @@ export default function AdminUserDetails() {
 
   const fetchUser = async () => {
     try {
-      const res = await API.get(`/admin/user/${userId}`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
+      const res = await API.get(`/admin/user/${userId}`);
       setUser(res.data);
     } catch (err) {
       toast.error("Failed to load user");
@@ -52,11 +50,7 @@ export default function AdminUserDetails() {
       const url = user.subscription
         ? `/admin/update-subscription/${userId}`
         : `/admin/create-subscription/${userId}`;
-      const res = await API.post(
-        url,
-        {},
-        { headers: { Authorization: `Bearer ${auth.token}` } },
-      );
+      const res = await API.post(url, {});
       toast.success(res.data.message);
       fetchUser(); // refresh user data
     } catch (err) {

@@ -25,6 +25,7 @@ export default function AdminLogin() {
         userId: res.data.userId,
         isLoggedIn: res.data.isLoggedIn,
       });
+
       toast.success("Admin login successful!");
       navigate("/admin/dashboard");
     } catch (err) {

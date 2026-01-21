@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import { useEffect } from "react";
 import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
 import Dashboard from "./components/dashboard/User/Dashboard";
@@ -17,7 +17,22 @@ import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
 import "./styles/output.css";
 import "./styles/app.css";
 import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
+import { jwtDecode } from "jwt-decode";
 export default function App() {
+  useEffect(() => {
+    let token = localStorage.getItem("token");
+
+    const decoded_value = jwtDecode(token);
+
+    let token_object = {
+      id: decoded_value.id,
+      expiryDate: new Date(decoded_value.exp * 1000).toLocaleString(),
+      creationDate: new Date(decoded_value.exp * 1000).toLocaleString(),
+      role: decoded_value.role,
+    };
+    console.table(token_object);
+  }, []);
+
   return (
     <>
       <Navbar />

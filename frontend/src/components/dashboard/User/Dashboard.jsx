@@ -1,5 +1,5 @@
 import { useAuth } from "../../../context/AuthContext";
-import API, { setToken } from "../../../api/api";
+import API from "../../../api/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -8,7 +8,6 @@ export default function Dashboard() {
   const { auth } = useAuth();
   const checkSubscription = async () => {
     try {
-      setToken(auth.token);
       const res = await API.get("/auth/dashboard");
       console.log(res.data);
     } catch (error) {

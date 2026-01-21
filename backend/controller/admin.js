@@ -18,14 +18,11 @@ export const adminSignup = async (req, res) => {
       name,
       email,
       password,
+      role: "admin",
     });
 
     res.status(201).json({
       message: "Admin created successfully",
-      token: generateToken(admin._id),
-      role: "admin",
-      adminId: admin._id,
-      isLoggedIn: true,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
