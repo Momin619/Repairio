@@ -18,7 +18,7 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post("/auth/login", data);
+      const res = await API.post("/user/login", data);
       setAuth({
         token: res.data.token,
         role: res.data.role,

@@ -3,12 +3,13 @@ import API from "../../../api/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import RepairItemList from "./RepairItemList";
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { auth } = useAuth();
+
   const checkSubscription = async () => {
     try {
-      const res = await API.get("/auth/dashboard");
+      const res = await API.get("/user/dashboard");
       console.log(res.data);
     } catch (error) {
       if (error.response?.status === 403) {
@@ -23,8 +24,7 @@ export default function Dashboard() {
   }, []);
   return (
     <div>
-      <h1>Welcome, {auth.role}</h1>
-      <p>User ID: {auth.userId}</p>
+      <RepairItemList />
     </div>
   );
 }

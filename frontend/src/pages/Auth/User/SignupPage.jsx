@@ -1,6 +1,5 @@
 import React from "react";
-import SignUp from "../../../components/Auth/User/Signup";
-import Navbar from "../../../components/ui/Navbar";
+import SignUp from "@/components/Auth/User/Signup";
 export default function SignupPage() {
   return (
     <div>

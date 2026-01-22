@@ -23,7 +23,7 @@ export const createSubscription = async (req, res) => {
     }
 
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days = 1 month
 
     const subscription = await Subscription.create({
       user: user._id,
@@ -70,19 +70,17 @@ export const updateSubscription = async (req, res) => {
 };
 
 export const checkSubscription = async (req, res, next) => {
-  console.log("called dashboard controller");
-
   try {
     const user = req.user; // comes from protect middleware
-    console.log(user);
-
+    console.log("checkSubscription called for user:", user._id);
+    console.log("User subscription ID:", user.subscription);
     if (!user.subscription) {
       return res.status(403).json({
         message: "No active subscription. Please contact admin.",
       });
     }
-
     const subscription = await Subscription.findById(user.subscription);
+    console.log("Fetched subscription:", subscription);
 
     if (!subscription) {
       return res.status(403).json({
@@ -90,6 +88,7 @@ export const checkSubscription = async (req, res, next) => {
       });
     }
 
+    console.log("Subscription endDate:", subscription.endDate);
     const now = new Date();
 
     if (subscription.endDate < now) {
@@ -103,7 +102,7 @@ export const checkSubscription = async (req, res, next) => {
 
     // ✅ subscription valid
     req.subscription = subscription;
-    next();
+    res.json({ message: "Dashboard ok logginng from backend" }).status(200);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

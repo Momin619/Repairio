@@ -3,6 +3,8 @@ import User from "../model/user.js";
 import Admin from "../model/admin.js";
 
 export const protect = async (req, res, next) => {
+  console.log("Protect middleware called");
+
   let token;
 
   if (
@@ -52,6 +54,7 @@ export const protect = async (req, res, next) => {
       req.role = decoded.role;
     }
 
+    console.log("token", token);
     next();
   } catch (err) {
     console.log(err);

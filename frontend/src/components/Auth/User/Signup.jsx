@@ -29,7 +29,7 @@ export default function Signup() {
   const onSubmit = async (data) => {
     try {
       delete data.confirmPassword; // remove confirmPassword before sending
-      const res = await API.post("/auth/signup", data);
+      const res = await API.post("/user/signup", data);
 
       toast.success(res.data.message || "Account created!"); // ✅ toast
       navigate("/login");

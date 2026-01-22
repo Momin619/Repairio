@@ -3,7 +3,8 @@ import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
-import Dashboard from "./components/dashboard/User/Dashboard";
+import UserDashboardPage from "./pages/Dashboard/User/UserDashboardPage";
+import RepairItemFormPage from "./pages/Dashboard/User/RepairItemFormPage";
 import NoSubscription from "./components/ui/ErrorPages/NoSubscription";
 import NotFound from "./components/ui/ErrorPages/NotFound";
 import Unauthorized from "./components/ui/ErrorPages/Unauthorized";
@@ -17,22 +18,8 @@ import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
 import "./styles/output.css";
 import "./styles/app.css";
 import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
-import { jwtDecode } from "jwt-decode";
+
 export default function App() {
-  useEffect(() => {
-    let token = localStorage.getItem("token");
-
-    const decoded_value = jwtDecode(token);
-
-    let token_object = {
-      id: decoded_value.id,
-      expiryDate: new Date(decoded_value.exp * 1000).toLocaleString(),
-      creationDate: new Date(decoded_value.exp * 1000).toLocaleString(),
-      role: decoded_value.role,
-    };
-    console.table(token_object);
-  }, []);
-
   return (
     <>
       <Navbar />
@@ -49,11 +36,18 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute allowedRoles={"seller"}>
-              <Dashboard />
+              <UserDashboardPage />
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/repair-item"
+          element={
+            <ProtectedRoute allowedRoles={"seller"}>
+              <RepairItemFormPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Admin-only route */}
         <Route
           path="/user/:userId"
