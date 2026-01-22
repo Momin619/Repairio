@@ -10,161 +10,125 @@ export default function Navbar() {
   const { auth, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isLoggedIn = auth.isLoggedIn;
-  const isAdmin = auth.role === "admin";
+  const { isLoggedIn, role } = auth;
 
-  const links = [
-    { name: "Features", to: "/features" },
-    { name: "How it works", to: "/how" },
-  ];
+  /* ---------------- ROLE BASED LINKS ---------------- */
+  const roleLinks = {
+    admin: [{ name: "Admin Dashboard", to: "/admin/dashboard" }],
+    seller: [
+      { name: "Repair Item", to: "/repair-item" },
+      { name: "Dashboard", to: "/dashboard" },
+    ],
+  };
+
+  const currentLinks = isLoggedIn ? roleLinks[role] || [] : [];
+
+  /* ---------------- LINK RENDER ---------------- */
+  const renderLinks = (onClick) =>
+    currentLinks.map((link) => (
+      <Link
+        key={link.name}
+        to={link.to}
+        onClick={onClick}
+        className="flex items-center h-10 px-2 text-gray-700 transition rounded-md  dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        {link.name}
+      </Link>
+    ));
 
   return (
     <nav
-      className={`sticky top-0 z-50 backdrop-blur transition-colors duration-500 border-b ${
+      className={`sticky top-0 z-50 backdrop-blur border-b transition-colors ${
         theme === "dark"
           ? "bg-black/90 border-gray-700 text-white"
           : "bg-white/90 border-gray-300 text-black"
       }`}
     >
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-lg font-bold dark:text-white"
-          >
-            <FiTool className="text-2xl text-blue-500" />
-            Repairio
-          </Link>
+      <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
+        {/* Logo → Home */}
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
+          <FiTool className="text-2xl text-blue-500" />
+          Repairio
+        </Link>
 
-          {/* Desktop Links */}
-          <div className="hidden sm:flex sm:items-center sm:gap-4 lg:gap-6">
-            {links.map((link) => (
-              <Link
-                key={link.name}
-                to={link.to}
-                className="px-3 py-1 text-gray-700 transition rounded-md dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                {link.name}
-              </Link>
-            ))}
+        {/* Desktop */}
+        <div className="items-center hidden sm:flex">
+          {/* ROLE LINKS */}
+          {isLoggedIn && (
+            <div className="flex items-center space-x-6">{renderLinks()}</div>
+          )}
 
+          {/* AUTH */}
+          <div className="flex items-center ml-6 space-x-4">
             {!isLoggedIn ? (
               <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-white transition bg-green-600 rounded-lg hover:bg-green-500"
-                >
+                <Link to="/login" className="btn-green">
                   Login
                 </Link>
-                <Link
-                  to="/signup"
-                  className="px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-500"
-                >
+                <Link to="/signup" className="btn-blue">
                   Signup
                 </Link>
               </>
             ) : (
-              <>
-                <Link
-                  to={isAdmin ? "/admin/dashboard" : "/dashboard"}
-                  className="px-4 py-2 text-white transition bg-gray-600 rounded-lg hover:bg-gray-500"
-                >
-                  {isAdmin ? "Admin" : "Profile"}
-                </Link>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 text-white transition bg-red-600 rounded-lg hover:bg-red-500"
-                >
-                  Logout
-                </button>
-              </>
+              <button onClick={logout} className="btn-red">
+                Logout
+              </button>
             )}
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-gray-800 transition bg-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <FiSun /> : <FiMoon />}
-            </button>
           </div>
 
-          {/* Mobile Hamburger */}
-          <div className="flex items-center gap-2 sm:hidden">
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-gray-800 transition bg-gray-200 rounded-lg dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <FiSun /> : <FiMoon />}
-            </button>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 text-gray-800 transition rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-            </button>
-          </div>
+          {/* THEME */}
+          <button onClick={toggleTheme} className="ml-4 icon-btn">
+            {theme === "dark" ? <FiSun /> : <FiMoon />}
+          </button>
+        </div>
+
+        {/* Mobile */}
+        <div className="flex items-center gap-2 sm:hidden">
+          <button onClick={toggleTheme} className="icon-btn">
+            {theme === "dark" ? <FiSun /> : <FiMoon />}
+          </button>
+          <button onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`sm:hidden transition-all duration-300 ${
+        className={`sm:hidden transition-all ${
           mobileOpen ? "max-h-screen" : "max-h-0 overflow-hidden"
         }`}
       >
-        <div className="flex flex-col gap-2 px-4 pt-2 pb-4 bg-white border-t border-gray-300 dark:bg-black dark:border-gray-700">
-          {links.map((link) => (
-            <Link
-              key={link.name}
-              to={link.to}
-              className="px-3 py-2 text-gray-700 transition rounded-md dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
+        <div className="flex flex-col gap-3 px-4 py-4 border-t dark:border-gray-700">
+          {isLoggedIn && renderLinks(() => setMobileOpen(false))}
 
           {!isLoggedIn ? (
             <>
               <Link
                 to="/login"
-                className="px-4 py-2 text-white transition bg-green-600 rounded-lg hover:bg-green-500"
                 onClick={() => setMobileOpen(false)}
+                className="btn-green"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-500"
                 onClick={() => setMobileOpen(false)}
+                className="btn-blue"
               >
                 Signup
               </Link>
             </>
           ) : (
-            <>
-              <Link
-                to={isAdmin ? "/admin/dashboard" : "/dashboard"}
-                className="px-4 py-2 text-white transition bg-gray-600 rounded-lg hover:bg-gray-500"
-                onClick={() => setMobileOpen(false)}
-              >
-                {isAdmin ? "Admin" : "Profile"}
-              </Link>
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileOpen(false);
-                }}
-                className="px-4 py-2 text-white transition bg-red-600 rounded-lg hover:bg-red-500"
-              >
-                Logout
-              </button>
-            </>
+            <button
+              onClick={() => {
+                logout();
+                setMobileOpen(false);
+              }}
+              className="btn-red"
+            >
+              Logout
+            </button>
           )}
         </div>
       </div>
