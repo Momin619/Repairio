@@ -7,7 +7,6 @@ const repairItemSchema = new mongoose.Schema(
     customer: {
       name: { type: String, required: true },
       phone: { type: String, required: true },
-      email: { type: String, required: true },
     },
     images: {
       type: [String], // store image URLs/paths

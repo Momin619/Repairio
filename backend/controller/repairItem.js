@@ -41,7 +41,10 @@ export const repairItemCreate = async (req, res) => {
 // Get all repair items for seller
 export const repairItemList = async (req, res) => {
   try {
-    const items = await RepairItem.find({ sellerId: req.user._id });
+    const items = await RepairItem.find({
+      sellerId: req.user._id,
+      status: "in-repair",
+    });
     res.status(200).json(items);
   } catch (err) {
     res.status(500).json({ message: err.message });

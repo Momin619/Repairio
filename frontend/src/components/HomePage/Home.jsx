@@ -1,4 +1,3 @@
-import Navbar from "../ui/Navbar";
 import Hero from "./Hero";
 import Features from "./Features";
 import HowItWorks from "./HowItWorks";

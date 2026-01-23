@@ -1,137 +1,196 @@
 "use client";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import * as React from "react";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import { FiTool, FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
-import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
-export default function Navbar() {
-  const { theme, toggleTheme } = useTheme();
+export default function ResponsiveAppBar() {
   const { auth, logout } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+  const { theme, toggleTheme } = useTheme();
   const { isLoggedIn, role } = auth;
 
-  /* ---------------- ROLE BASED LINKS ---------------- */
+  const [anchorElNav, setAnchorElNav] = React.useState(null);
+
+  const handleOpenNavMenu = (event) => setAnchorElNav(event.currentTarget);
+  const handleCloseNavMenu = () => setAnchorElNav(null);
+
+  // Role-based links
   const roleLinks = {
     admin: [{ name: "Admin Dashboard", to: "/admin/dashboard" }],
     seller: [
-      { name: "Repair Item", to: "/repair-item" },
       { name: "Dashboard", to: "/dashboard" },
+      { name: "Add Item", to: "/repair-item" },
     ],
   };
 
   const currentLinks = isLoggedIn ? roleLinks[role] || [] : [];
 
-  /* ---------------- LINK RENDER ---------------- */
-  const renderLinks = (onClick) =>
-    currentLinks.map((link) => (
-      <Link
-        key={link.name}
-        to={link.to}
-        onClick={onClick}
-        className="flex items-center h-10 px-2 text-gray-700 transition rounded-md  dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-      >
-        {link.name}
-      </Link>
-    ));
+  // Auth links
+  const authLinks = isLoggedIn
+    ? [...currentLinks, { name: "Logout", action: logout }]
+    : [
+        { name: "Login", to: "/login" },
+        { name: "Signup", to: "/signup" },
+      ];
 
   return (
-    <nav
-      className={`sticky top-0 z-50 backdrop-blur border-b transition-colors ${
-        theme === "dark"
-          ? "bg-black/90 border-gray-700 text-white"
-          : "bg-white/90 border-gray-300 text-black"
-      }`}
+    <AppBar
+      position="sticky"
+      sx={{
+        backgroundColor: theme === "dark" ? "#111" : "#fff",
+        color: theme === "dark" ? "#fff" : "#111",
+        borderBottom: theme === "dark" ? "1px solid #333" : "1px solid #ddd",
+      }}
     >
-      <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
-        {/* Logo → Home */}
-        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
-          <FiTool className="text-2xl text-blue-500" />
-          Repairio
-        </Link>
-
-        {/* Desktop */}
-        <div className="items-center hidden sm:flex">
-          {/* ROLE LINKS */}
-          {isLoggedIn && (
-            <div className="flex items-center space-x-6">{renderLinks()}</div>
-          )}
-
-          {/* AUTH */}
-          <div className="flex items-center ml-6 space-x-4">
-            {!isLoggedIn ? (
-              <>
-                <Link to="/login" className="btn-green">
-                  Login
-                </Link>
-                <Link to="/signup" className="btn-blue">
-                  Signup
-                </Link>
-              </>
-            ) : (
-              <button onClick={logout} className="btn-red">
-                Logout
-              </button>
-            )}
-          </div>
-
-          {/* THEME */}
-          <button onClick={toggleTheme} className="ml-4 icon-btn">
-            {theme === "dark" ? <FiSun /> : <FiMoon />}
-          </button>
-        </div>
-
-        {/* Mobile */}
-        <div className="flex items-center gap-2 sm:hidden">
-          <button onClick={toggleTheme} className="icon-btn">
-            {theme === "dark" ? <FiSun /> : <FiMoon />}
-          </button>
-          <button onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <div
-        className={`sm:hidden transition-all ${
-          mobileOpen ? "max-h-screen" : "max-h-0 overflow-hidden"
-        }`}
-      >
-        <div className="flex flex-col gap-3 px-4 py-4 border-t dark:border-gray-700">
-          {isLoggedIn && renderLinks(() => setMobileOpen(false))}
-
-          {!isLoggedIn ? (
-            <>
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="btn-green"
-              >
-                Login
-              </Link>
-              <Link
-                to="/signup"
-                onClick={() => setMobileOpen(false)}
-                className="btn-blue"
-              >
-                Signup
-              </Link>
-            </>
-          ) : (
-            <button
-              onClick={() => {
-                logout();
-                setMobileOpen(false);
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
+          {/* Brand */}
+          <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
+            <FiTool size={28} color="#1976d2" />
+            <Typography
+              variant="h6"
+              noWrap
+              component="a"
+              href="/"
+              sx={{
+                ml: 1,
+                fontWeight: 700,
+                textDecoration: "none",
+                color: "inherit",
               }}
-              className="btn-red"
             >
-              Logout
-            </button>
-          )}
-        </div>
-      </div>
-    </nav>
+              Repairio
+            </Typography>
+          </Box>
+
+          {/* Desktop links */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: "none", md: "flex" },
+              justifyContent: "flex-end",
+              gap: 2,
+            }}
+          >
+            {authLinks.map((link) =>
+              link.action ? (
+                <Button
+                  key={link.name}
+                  onClick={link.action}
+                  sx={{
+                    color: theme === "dark" ? "#fff" : "#111",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: theme === "dark" ? "#222" : "#f0f0f0",
+                      color: "#1976d2",
+                    },
+                  }}
+                >
+                  {link.name}
+                </Button>
+              ) : (
+                <Button
+                  key={link.name}
+                  href={link.to}
+                  sx={{
+                    color: theme === "dark" ? "#fff" : "#111",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: theme === "dark" ? "#222" : "#f0f0f0",
+                      color: "#1976d2",
+                    },
+                  }}
+                >
+                  {link.name}
+                </Button>
+              ),
+            )}
+
+            {/* Theme toggle */}
+            <IconButton
+              onClick={toggleTheme}
+              sx={{
+                ml: 1,
+                color: theme === "dark" ? "#fff" : "#111",
+                "&:hover": {
+                  backgroundColor: theme === "dark" ? "#222" : "#f0f0f0",
+                },
+              }}
+            >
+              {theme === "dark" ? <FiSun /> : <FiMoon />}
+            </IconButton>
+          </Box>
+
+          {/* Mobile menu */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: "flex", md: "none" },
+              justifyContent: "flex-end",
+            }}
+          >
+            <IconButton
+              size="large"
+              aria-label="menu"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleOpenNavMenu}
+              color="inherit"
+            >
+              <FiMenu />
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorElNav}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              keepMounted
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              open={Boolean(anchorElNav)}
+              onClose={handleCloseNavMenu}
+            >
+              {authLinks.map((link) =>
+                link.action ? (
+                  <MenuItem
+                    key={link.name}
+                    onClick={() => {
+                      link.action();
+                      handleCloseNavMenu();
+                    }}
+                  >
+                    {link.name}
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    key={link.name}
+                    component="a"
+                    href={link.to}
+                    onClick={handleCloseNavMenu}
+                  >
+                    {link.name}
+                  </MenuItem>
+                ),
+              )}
+              <MenuItem
+                onClick={() => {
+                  toggleTheme();
+                  handleCloseNavMenu();
+                }}
+              >
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 }
