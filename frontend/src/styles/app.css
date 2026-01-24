@@ -21,6 +21,7 @@ h3 {
 /* Buttons */
 button {
   font-family: "Roboto", sans-serif;
+  cursor: pointer;
 }
 html {
   transition:

@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
+
 import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
 import UserDashboardPage from "./pages/Dashboard/User/UserDashboardPage";
@@ -18,6 +18,7 @@ import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
 import "./styles/output.css";
 import "./styles/app.css";
 import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
+import RepairHistoryPage from "./pages/Dashboard/User/RepairHistoryPage";
 
 export default function App() {
   return (
@@ -45,6 +46,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={"seller"}>
               <RepairItemFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/repair-history"
+          element={
+            <ProtectedRoute allowedRoles={"seller"}>
+              <RepairHistoryPage />
             </ProtectedRoute>
           }
         />

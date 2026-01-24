@@ -12,6 +12,9 @@ export default function RepairItemCard({ itemData, onCompleted }) {
         status: "completed",
       });
       toast.success(res.data.message);
+      if (res.data.whatsappLink) {
+        window.open(res.data.whatsappLink, "_blank");
+      }
       onCompleted(item._id);
     } catch (err) {
       toast.error(err.response?.data?.message || "Error updating status");

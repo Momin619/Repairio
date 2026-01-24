@@ -14,7 +14,7 @@ const app = express();
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.100.124:5173"],
+    origin: ["http://localhost:5173", "http://192.168.33.129:5173"],
     credentials: true,
   }),
 );
@@ -25,6 +25,6 @@ app.use("/api/admin", adminRouter);
 app.use("/api", repairItemRouter);
 
 const PORT = process.env.PORT;
-app.listen(PORT, () =>
+app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on http://localhost:${PORT}`),
 );

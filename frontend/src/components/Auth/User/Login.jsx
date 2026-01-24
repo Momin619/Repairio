@@ -42,13 +42,16 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 bg-gray-100 dark:bg-black">
-      <div className="w-full max-w-md p-8 bg-white shadow-lg dark:bg-gray-900 rounded-2xl">
+    <div className="flex items-center justify-center min-h-[80vh] px-4">
+      <div className="w-full max-w-md p-4 bg-white shadow-lg sm:p-8 dark:bg-gray-900 rounded-2xl">
         <h2 className="mb-6 text-3xl font-bold text-center text-gray-900 dark:text-white">
           Login
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-3 sm:space-y-5"
+        >
           {/* Email */}
           <div className="relative">
             <FaEnvelope className="absolute text-gray-400 left-3 top-3 dark:text-gray-300" />

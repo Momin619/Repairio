@@ -1,5 +1,5 @@
 import RepairItem from "../model/repairItem.js";
-
+import { toWhatsAppNumber } from "../utils/phoneNumber.js";
 // Create a new repair item
 export const repairItemCreate = async (req, res) => {
   try {
@@ -70,22 +70,51 @@ export const repairItemGetById = async (req, res) => {
 export const repairItemUpdateStatus = async (req, res) => {
   try {
     const { status } = req.body;
+
     const item = await RepairItem.findById(req.params.id);
-    if (!item)
+    if (!item) {
       return res.status(404).json({ message: "Repair item not found" });
+    }
 
     item.status = status;
+    let whatsappLink = null;
 
-    // Set completedAt if status is completed
     if (status === "completed") {
       item.completedAt = new Date();
+
+      // Check if customer and phone exist
+      const phone = item.customer?.phone;
+      if (!phone) {
+        return res
+          .status(400)
+          .json({ message: "Customer phone number not found" });
+      }
+
+      try {
+        const whatsappNumber = toWhatsAppNumber(phone);
+
+        const message = `Hello ${item.customer.name},
+Your repair item (${item.itemName}) has been completed.
+Thank you for choosing us!`;
+
+        whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+          message,
+        )}`;
+      } catch (err) {
+        return res.status(400).json({ message: err.message });
+      }
     } else {
-      item.completedAt = null; // reset if changing back to in-repair
+      item.completedAt = null;
     }
 
     await item.save();
 
-    res.status(200).json({ message: "Repair item status updated", item });
+    // Send updated item + WhatsApp link to frontend
+    res.status(200).json({
+      message: "Repair item status updated",
+      item,
+      whatsappLink, // null if not completed or phone invalid
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

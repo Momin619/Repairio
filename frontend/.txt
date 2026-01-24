@@ -1,0 +1,14 @@
+to test locally on mobile phone or any other devices
+we have to make frontend and backend url as
+local ip and port number 
+const API = axios.create({
+  baseURL: "http://192.168.33.129:4500/api",
+  withCredentials: true,
+});
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://192.168.33.129:5173"],
+    credentials: true,
+  }),
+);

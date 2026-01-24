@@ -9,9 +9,10 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { FiTool, FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
+import { FiTool, FiSun, FiMoon, FiMenu } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { useLocation, Link } from "react-router-dom"; // <-- For routing
 
 export default function ResponsiveAppBar() {
   const { auth, logout } = useAuth();
@@ -29,6 +30,7 @@ export default function ResponsiveAppBar() {
     seller: [
       { name: "Dashboard", to: "/dashboard" },
       { name: "Add Item", to: "/repair-item" },
+      { name: "Repair History", to: "/repair-history" },
     ],
   };
 
@@ -41,6 +43,8 @@ export default function ResponsiveAppBar() {
         { name: "Login", to: "/login" },
         { name: "Signup", to: "/signup" },
       ];
+
+  const location = useLocation(); // Get current path
 
   return (
     <AppBar
@@ -59,8 +63,8 @@ export default function ResponsiveAppBar() {
             <Typography
               variant="h6"
               noWrap
-              component="a"
-              href="/"
+              component={Link}
+              to="/"
               sx={{
                 ml: 1,
                 fontWeight: 700,
@@ -78,7 +82,7 @@ export default function ResponsiveAppBar() {
               flexGrow: 1,
               display: { xs: "none", md: "flex" },
               justifyContent: "flex-end",
-              gap: 2,
+              gap: 1,
             }}
           >
             {authLinks.map((link) =>
@@ -89,8 +93,9 @@ export default function ResponsiveAppBar() {
                   sx={{
                     color: theme === "dark" ? "#fff" : "#111",
                     textTransform: "none",
+                    backgroundColor: "transparent",
                     "&:hover": {
-                      backgroundColor: theme === "dark" ? "#222" : "#f0f0f0",
+                      backgroundColor: theme === "dark" ? "#444" : "#f0f0f0",
                       color: "#1976d2",
                     },
                   }}
@@ -100,12 +105,20 @@ export default function ResponsiveAppBar() {
               ) : (
                 <Button
                   key={link.name}
-                  href={link.to}
+                  component={Link}
+                  to={link.to}
                   sx={{
                     color: theme === "dark" ? "#fff" : "#111",
                     textTransform: "none",
+                    backgroundColor:
+                      location.pathname === link.to
+                        ? theme === "dark"
+                          ? "#444"
+                          : "#e0e0e0"
+                        : "transparent",
+                    borderRadius: 1,
                     "&:hover": {
-                      backgroundColor: theme === "dark" ? "#222" : "#f0f0f0",
+                      backgroundColor: theme === "dark" ? "#333" : "#d0d0d0",
                       color: "#1976d2",
                     },
                   }}
@@ -171,22 +184,22 @@ export default function ResponsiveAppBar() {
                 ) : (
                   <MenuItem
                     key={link.name}
-                    component="a"
-                    href={link.to}
+                    component={Link}
+                    to={link.to}
                     onClick={handleCloseNavMenu}
+                    sx={{
+                      backgroundColor:
+                        location.pathname === link.to
+                          ? theme === "dark"
+                            ? "#222"
+                            : "#e0e0e0"
+                          : "transparent",
+                    }}
                   >
                     {link.name}
                   </MenuItem>
                 ),
               )}
-              <MenuItem
-                onClick={() => {
-                  toggleTheme();
-                  handleCloseNavMenu();
-                }}
-              >
-                {theme === "dark" ? "Light Mode" : "Dark Mode"}
-              </MenuItem>
             </Menu>
           </Box>
         </Toolbar>
