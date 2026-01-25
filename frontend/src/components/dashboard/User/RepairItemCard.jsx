@@ -42,7 +42,7 @@ export default function RepairItemCard({ itemData, onCompleted }) {
         {/* Image */}
         {item.images && item.images.length > 0 ? (
           <img
-            src={`http://192.168.2.101:4500${item.images[0]}`} // use first image
+            src={`http://192.168.100.7:4500${item.images[0]}`} // use first image
             alt={item.itemName}
             className="flex-shrink-0 object-cover w-full h-40 rounded-lg md:w-40 md:h-40"
           />

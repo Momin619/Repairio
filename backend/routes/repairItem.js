@@ -7,6 +7,7 @@ import {
   repairItemHistory,
   repairItemList,
   repairItemUpdateStatus,
+  sellerSubscriptionActive,
 } from "../controller/repairItem.js";
 
 import { protect } from "../middlewares/auth.js";
@@ -15,21 +16,39 @@ const repairItemRouter = express.Router();
 repairItemRouter.post(
   "/repair-item",
   protect,
+  sellerSubscriptionActive,
   upload.array("images", 5),
   repairItemCreate,
 ); // Create
-repairItemRouter.get("/repair-items", protect, repairItemList); // List all
+repairItemRouter.get(
+  "/repair-items",
+  protect,
+  sellerSubscriptionActive,
+  repairItemList,
+); // List all
 repairItemRouter.get(
   "/repair-items/history/completed",
   protect,
+  sellerSubscriptionActive,
   repairItemHistory,
 ); // Completed items only
-repairItemRouter.get("/repair-item/:id", protect, repairItemGetById); // Single item
+repairItemRouter.get(
+  "/repair-item/:id",
+  protect,
+  sellerSubscriptionActive,
+  repairItemGetById,
+); // Single item
 repairItemRouter.patch(
   "/repair-item/:id/update-status",
   protect,
+  sellerSubscriptionActive,
   repairItemUpdateStatus,
 ); // Update status
-repairItemRouter.delete("/repair-item/:id/delete", protect, repairItemDelete); // Deleteiption);
+repairItemRouter.delete(
+  "/repair-item/:id/delete",
+  protect,
+  sellerSubscriptionActive,
+  repairItemDelete,
+); // Deleteiption);
 
 export default repairItemRouter;

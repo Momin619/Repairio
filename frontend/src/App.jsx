@@ -5,7 +5,6 @@ import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
 import UserDashboardPage from "./pages/Dashboard/User/UserDashboardPage";
 import RepairItemFormPage from "./pages/Dashboard/User/RepairItemFormPage";
-import NoSubscription from "./components/ui/ErrorPages/NoSubscription";
 import NotFound from "./components/ui/ErrorPages/NotFound";
 import Unauthorized from "./components/ui/ErrorPages/Unauthorized";
 import { ProtectedRoute } from "./components/Auth/User/ProtectedRoutes";
@@ -21,7 +20,7 @@ import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired"
 import RepairHistoryPage from "./pages/Dashboard/User/RepairHistoryPage";
 import SellerDock from "./components/ui/SellerDock";
 import { useAuth } from "./context/AuthContext";
-
+import SettingPage from "./pages/Setting/SettingPage";
 export default function App() {
   const {
     auth: { role, isLoggedIn },
@@ -34,6 +33,7 @@ export default function App() {
 
       <Routes>
         <Route path="/subscription-expired" element={<SubscriptionExpired />} />
+        <Route path="/settings" element={<SettingPage />} />
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -83,7 +83,6 @@ export default function App() {
           }
         />
         {/* No subscription */}
-        <Route path="/no-subscription" element={<NoSubscription />} />
 
         {/* Unauthorized */}
         <Route path="/unauthorized" element={<Unauthorized />} />

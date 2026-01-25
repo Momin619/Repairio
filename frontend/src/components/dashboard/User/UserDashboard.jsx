@@ -6,21 +6,23 @@ import RepairItemList from "./RepairItemList";
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const checkSubscription = async () => {
-    try {
-      const res = await API.get("/user/dashboard");
-      console.log(res.data);
-    } catch (error) {
-      if (error.response?.status === 403) {
-        toast.error(error.response.data.message);
-        navigate("/subscription-expired");
-      }
-    }
-  };
-
   useEffect(() => {
-    checkSubscription();
+    const subscriptionStatus = localStorage.getItem("subscriptionStatus");
+    const subscriptionEndDate = localStorage.getItem("subscriptionEndDate");
+    console.log(subscriptionEndDate, subscriptionStatus);
+
+    if (!subscriptionStatus || subscriptionStatus !== "active") {
+      toast.error("Your subscription is not active");
+      navigate("/subscription-expired");
+      return;
+    }
+
+    if (subscriptionEndDate && new Date(subscriptionEndDate) < new Date()) {
+      toast.error("Your subscription has expired");
+      navigate("/subscription-expired");
+    }
   }, []);
+
   return (
     <div>
       <RepairItemList />

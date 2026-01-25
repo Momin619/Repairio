@@ -11,9 +11,11 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { FiTool, FiMenu } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { useLocation, Link } from "react-router-dom";
 
 export default function ResponsiveAppBar() {
+  const { theme } = useTheme();
   const { auth, logout } = useAuth();
   const { isLoggedIn, role } = auth;
   const location = useLocation();
@@ -33,7 +35,7 @@ export default function ResponsiveAppBar() {
         { name: "Signup", to: "/signup" },
       ];
 
-  // Seller links (desktop only)
+  // Seller links
   const sellerLinks =
     role === "seller"
       ? [
@@ -43,8 +45,27 @@ export default function ResponsiveAppBar() {
         ]
       : [];
 
+  // Helper to get active link styles
+  const getLinkStyles = (linkTo) => ({
+    backgroundColor:
+      location.pathname === linkTo
+        ? theme === "dark"
+          ? "#444" // dark theme active background
+          : "#e0e0e0" // light theme active background
+        : "transparent",
+    color: theme === "dark" ? "#fff" : "#111",
+    textTransform: "none",
+  });
+
   return (
-    <AppBar position="sticky">
+    <AppBar
+      position="sticky"
+      sx={{
+        backgroundColor: theme === "dark" ? "#111" : "#fff",
+        color: theme === "dark" ? "#fff" : "#111",
+        borderBottom: theme === "dark" ? "1px solid #333" : "1px solid #ddd",
+      }}
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Brand */}
@@ -60,18 +81,15 @@ export default function ResponsiveAppBar() {
             </Typography>
           </Box>
 
-          {/* Seller links (DESKTOP ONLY) */}
-          {role === "seller" && sellerLinks.length > 0 && (
+          {/* Seller links (desktop only) */}
+          {sellerLinks.length > 0 && (
             <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
               {sellerLinks.map((link) => (
                 <Button
                   key={link.name}
                   component={Link}
                   to={link.to}
-                  sx={{
-                    backgroundColor:
-                      location.pathname === link.to ? "#e0e0e0" : "transparent",
-                  }}
+                  sx={getLinkStyles(link.to)}
                 >
                   {link.name}
                 </Button>
@@ -81,11 +99,15 @@ export default function ResponsiveAppBar() {
 
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* Auth buttons (DESKTOP ONLY) */}
+          {/* Auth links (desktop only) */}
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
             {authLinks.map((link) =>
               link.action ? (
-                <Button key={link.name} onClick={link.action}>
+                <Button
+                  key={link.name}
+                  onClick={link.action}
+                  sx={getLinkStyles("")}
+                >
                   {link.name}
                 </Button>
               ) : (
@@ -93,10 +115,7 @@ export default function ResponsiveAppBar() {
                   key={link.name}
                   component={Link}
                   to={link.to}
-                  sx={{
-                    backgroundColor:
-                      location.pathname === link.to ? "#e0e0e0" : "transparent",
-                  }}
+                  sx={getLinkStyles(link.to)}
                 >
                   {link.name}
                 </Button>
@@ -104,43 +123,48 @@ export default function ResponsiveAppBar() {
             )}
           </Box>
 
-          {/* Mobile menu (ONLY when dock is visible) */}
-          {role === "seller" && (
-            <Box sx={{ display: { xs: "flex", md: "none" } }}>
-              <IconButton onClick={openMenu}>
-                <FiMenu />
-              </IconButton>
+          {/* Mobile menu (ALL users) */}
+          {/* Mobile menu (ALL users) */}
+          <Box sx={{ display: { xs: "flex", md: "none" } }}>
+            <IconButton
+              onClick={openMenu}
+              sx={{ color: theme === "dark" ? "#fff" : "#111" }}
+            >
+              <FiMenu />
+            </IconButton>
 
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={closeMenu}
-              >
-                {authLinks.map((link) =>
-                  link.action ? (
-                    <MenuItem
-                      key={link.name}
-                      onClick={() => {
-                        link.action();
-                        closeMenu();
-                      }}
-                    >
-                      {link.name}
-                    </MenuItem>
-                  ) : (
-                    <MenuItem
-                      key={link.name}
-                      component={Link}
-                      to={link.to}
-                      onClick={closeMenu}
-                    >
-                      {link.name}
-                    </MenuItem>
-                  ),
-                )}
-              </Menu>
-            </Box>
-          )}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={closeMenu}
+            >
+              {/* ⚡ Only auth links for mobile */}
+              {authLinks.map((link) =>
+                link.action ? (
+                  <MenuItem
+                    key={link.name}
+                    onClick={() => {
+                      link.action();
+                      closeMenu();
+                    }}
+                    sx={{ color: theme === "dark" ? "#fff" : "#111" }}
+                  >
+                    {link.name}
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    key={link.name}
+                    component={Link}
+                    to={link.to}
+                    onClick={closeMenu}
+                    sx={{ color: theme === "dark" ? "#fff" : "#111" }}
+                  >
+                    {link.name}
+                  </MenuItem>
+                ),
+              )}
+            </Menu>
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

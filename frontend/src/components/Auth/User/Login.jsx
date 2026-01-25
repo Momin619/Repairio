@@ -19,6 +19,8 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       const res = await API.post("/user/login", data);
+
+      // Save auth info in context
       setAuth({
         token: res.data.token,
         role: res.data.role,
@@ -26,17 +28,35 @@ export default function Login() {
         isLoggedIn: res.data.isLoggedIn,
       });
 
-      toast.success("Login successful!"); // ✅ success toast
+      // Store subscription info in localStorage (for sellers)
+      if (res.data.role === "seller") {
+        localStorage.setItem(
+          "subscriptionStatus",
+          res.data.subscriptionStatus || "",
+        );
+        localStorage.setItem(
+          "subscriptionEndDate",
+          res.data.subscriptionEndDate || "",
+        );
+      } else {
+        localStorage.removeItem("subscriptionStatus");
+        localStorage.removeItem("subscriptionEndDate");
+      }
+
+      toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       const code = err.response?.data?.code;
-      if (code === "NO_SUBSCRIPTION") {
-        toast.error("You don’t have an active subscription."); // ❌ error toast
-        navigate("/no-subscription");
+
+      if (code === "EXPIRED") {
+        toast.error(err.response.data.message || "Subscription expired");
+        navigate("/subscription-expired"); // optional page for expired subscription
       } else if (code === "INACTIVE") {
-        toast.error("Your account is not approved yet.");
+        toast.error(err.response.data.message || "Account not active");
+      } else if (code === "INVALID") {
+        toast.error("Invalid email or password");
       } else {
-        toast.error("Login failed. Check your credentials.");
+        toast.error(err.response?.data?.message || "Login failed. Try again");
       }
     }
   };

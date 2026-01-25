@@ -23,7 +23,7 @@ export const createSubscription = async (req, res) => {
     }
 
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days = 1 month
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 1000); // 30 days = 1 month
 
     const subscription = await Subscription.create({
       user: user._id,

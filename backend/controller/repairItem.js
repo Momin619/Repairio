@@ -141,19 +141,46 @@ export const repairItemHistory = async (req, res) => {
       status: "completed",
     }).lean(); // lean() gives plain JS objects
 
-    // Add timeTaken field in hours
-    const itemsWithTime = completedItems.map((item) => ({
-      ...item,
-      timeTakenHours: item.completedAt
-        ? Math.round(
-            (new Date(item.completedAt) - new Date(item.createdAt)) /
-              (1000 * 60 * 60),
-          )
-        : null,
-    }));
+    // Add timeTaken field in hours and whatsappLink
+    const itemsWithExtras = completedItems.map((item) => {
+      let whatsappLink = null;
+      if (item.customer?.phone) {
+        try {
+          const whatsappNumber = toWhatsAppNumber(item.customer.phone);
+          const message = `Hello ${item.customer.name}, Your repair item (${item.itemName}) has been completed. Thank you for choosing us!`;
+          whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        } catch {
+          whatsappLink = null; // invalid phone
+        }
+      }
 
-    res.status(200).json(itemsWithTime);
+      return {
+        ...item,
+        timeTakenHours: item.completedAt
+          ? Math.round(
+              (new Date(item.completedAt) - new Date(item.createdAt)) /
+                (1000 * 60 * 60),
+            )
+          : null,
+        whatsappLink,
+      };
+    });
+
+    res.status(200).json(itemsWithExtras);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+export const sellerSubscriptionActive = (req, res, next) => {
+  if (req.user && req.user.role === "seller") {
+    const subscription = req.user.subscription;
+    if (
+      !subscription ||
+      subscription.status !== "active" ||
+      new Date(subscription.endDate) < new Date()
+    ) {
+      return res.status(403).json({ message: "Your subscription has expired" });
+    }
+  }
+  next();
 };
