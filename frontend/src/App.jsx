@@ -19,8 +19,14 @@ import "./styles/output.css";
 import "./styles/app.css";
 import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
 import RepairHistoryPage from "./pages/Dashboard/User/RepairHistoryPage";
+import SellerDock from "./components/ui/SellerDock";
+import { useAuth } from "./context/AuthContext";
 
 export default function App() {
+  const {
+    auth: { role, isLoggedIn },
+  } = useAuth();
+
   return (
     <>
       <Navbar />
@@ -85,6 +91,7 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {isLoggedIn && role === "seller" && <SellerDock />}
     </>
   );
 }

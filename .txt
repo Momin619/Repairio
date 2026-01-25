@@ -1,0 +1,4 @@
+1. navbar displays auth routes login , signup , setting , logout on all screens it should be responsive
+2. seller dock displays only on screens till tablets
+3. when screen size is larger than tabelts seller dock dont displays instead three links of seller appear in navbar which are dashboard , repair-item and reapir-history 
+4. dont inlcude theme in it
