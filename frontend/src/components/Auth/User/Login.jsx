@@ -29,19 +29,6 @@ export default function Login() {
       });
 
       // Store subscription info in localStorage (for sellers)
-      if (res.data.role === "seller") {
-        localStorage.setItem(
-          "subscriptionStatus",
-          res.data.subscriptionStatus || "",
-        );
-        localStorage.setItem(
-          "subscriptionEndDate",
-          res.data.subscriptionEndDate || "",
-        );
-      } else {
-        localStorage.removeItem("subscriptionStatus");
-        localStorage.removeItem("subscriptionEndDate");
-      }
 
       toast.success("Login successful!");
       navigate("/dashboard");
