@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
 import RepairItem from "./model/repairItem.js"; // adjust path
 
-const MONGO_URI =
-  "mongodb+srv://dbUser:dbUserPassword@repairio.dwekq6b.mongodb.net/test?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI;
 const conn = await mongoose.connect(MONGO_URI);
 console.log("Connected to DB:", conn.connection.name); // logs Repairio or test
 
