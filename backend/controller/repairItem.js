@@ -41,11 +41,27 @@ export const repairItemCreate = async (req, res) => {
 // Get all repair items for seller
 export const repairItemList = async (req, res) => {
   try {
-    const items = await RepairItem.find({
+    const { page = 1, limit = 12, search = "" } = req.query;
+
+    const query = {
       sellerId: req.user._id,
       status: "in-repair",
-    });
-    res.status(200).json(items);
+      $or: [
+        { itemName: { $regex: search, $options: "i" } },
+        { customerName: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const totalItems = await RepairItem.countDocuments(query);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const items = await RepairItem.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    res.status(200).json({ items, totalPages });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -136,37 +152,91 @@ export const repairItemDelete = async (req, res) => {
 // Fetch repair history (all completed items for seller)
 export const repairItemHistory = async (req, res) => {
   try {
-    const completedItems = await RepairItem.find({
+    const { search = "", page = 1, limit = 12 } = req.query;
+
+    // Build search filter
+    const searchFilter = {
       sellerId: req.user._id,
       status: "completed",
-    }).lean(); // lean() gives plain JS objects
+      $or: [
+        { itemName: { $regex: search, $options: "i" } },
+        { "customer.name": { $regex: search, $options: "i" } },
+        { "customer.phone": { $regex: search, $options: "i" } },
+      ],
+    };
 
-    // Add timeTaken field in hours and whatsappLink
+    // Count total matching items
+    const totalItems = await RepairItem.countDocuments(searchFilter);
+
+    // Fetch items with pagination
+    const completedItems = await RepairItem.find(searchFilter)
+      .sort({ completedAt: -1 }) // newest first
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Map extra fields
     const itemsWithExtras = completedItems.map((item) => {
       let whatsappLink = null;
+
       if (item.customer?.phone) {
         try {
           const whatsappNumber = toWhatsAppNumber(item.customer.phone);
           const message = `Hello ${item.customer.name}, Your repair item (${item.itemName}) has been completed. Thank you for choosing us!`;
           whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
         } catch {
-          whatsappLink = null; // invalid phone
+          whatsappLink = null;
         }
       }
 
+      // ⏱ Time calculation
+      let timeTakenValue = null;
+      let timeTakenUnit = null;
+
+      if (item.completedAt && item.createdAt) {
+        const diffMs = new Date(item.completedAt) - new Date(item.createdAt);
+        const diffMinutes = Math.round(diffMs / (1000 * 60));
+
+        if (diffMinutes < 60) {
+          timeTakenValue = diffMinutes;
+          timeTakenUnit = "minutes";
+        } else {
+          timeTakenValue = Math.round(diffMinutes / 60);
+          timeTakenUnit = "hours";
+        }
+      }
+
+      // 📅 Completion date & time
+      const completedDate = item.completedAt
+        ? new Date(item.completedAt).toLocaleDateString()
+        : null;
+
+      const completedTime = item.completedAt
+        ? new Date(item.completedAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null;
+
       return {
         ...item,
-        timeTakenHours: item.completedAt
-          ? Math.round(
-              (new Date(item.completedAt) - new Date(item.createdAt)) /
-                (1000 * 60 * 60),
-            )
-          : null,
+        timeTakenValue,
+        timeTakenUnit,
+        completedDate,
+        completedTime,
         whatsappLink,
       };
     });
 
-    res.status(200).json(itemsWithExtras);
+    // Total pages
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      items: itemsWithExtras,
+      page: parseInt(page),
+      totalPages,
+      totalItems,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

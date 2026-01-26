@@ -26,7 +26,7 @@ export default function Settings() {
             Theme
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Current theme: <strong>{theme}</strong>
+            Current theme: <strong className="capitalize">{theme}</strong>
           </Typography>
           <Button
             variant="contained"
