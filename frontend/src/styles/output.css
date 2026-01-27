@@ -640,6 +640,9 @@
   .pr-10 {
     padding-right: calc(var(--spacing) * 10);
   }
+  .pb-24 {
+    padding-bottom: calc(var(--spacing) * 24);
+  }
   .pl-10 {
     padding-left: calc(var(--spacing) * 10);
   }
@@ -1139,6 +1142,11 @@
   .md\:pt-20 {
     @media (width >= 48rem) {
       padding-top: calc(var(--spacing) * 20);
+    }
+  }
+  .md\:pb-8 {
+    @media (width >= 48rem) {
+      padding-bottom: calc(var(--spacing) * 8);
     }
   }
   .md\:text-2xl {

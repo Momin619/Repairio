@@ -1,29 +1,47 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import { useEffect, useState, useCallback } from "react";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
 import UsersTable from "@/components/ui/Tabel/UsersTable";
 import Loader from "@/components/ui/Loader";
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (pageNum = 1) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
 
-      const res = await API.get("/admin/users");
-      setUsers(res.data);
+      const res = await API.get(`/admin/users?page=${pageNum}&limit=12`);
+
+      const fetchedUsers = res.data.users || [];
+
+      if (pageNum === 1) setUsers(fetchedUsers);
+      else setUsers((prev) => [...prev, ...fetchedUsers]);
+
+      setTotalPages(res.data.totalPages);
     } catch {
       toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
+
+  const loadMore = () => {
+    if (page >= totalPages) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchUsers(nextPage);
+  };
 
   return (
     <div className="min-h-screen p-4 bg-gray-100 sm:p-6 md:p-8 dark:bg-black">
@@ -31,7 +49,25 @@ export default function AdminDashboard() {
         Admin Dashboard
       </h1>
 
-      {loading ? <Loader /> : <UsersTable users={users} />}
+      {loading && page === 1 ? (
+        <Loader />
+      ) : (
+        <>
+          <UsersTable users={users} />
+
+          {page < totalPages && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loadingMore ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

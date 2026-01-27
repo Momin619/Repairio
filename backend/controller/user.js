@@ -2,6 +2,8 @@ import User from "../model/user.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken.js";
 
+// User Signup
+
 export const signup = async (req, res) => {
   try {
     const user = await User.create(req.body);
@@ -10,24 +12,34 @@ export const signup = async (req, res) => {
       userId: user._id,
     });
   } catch (err) {
-    res
-      .status(400)
-      .json({ message: "Error creating account", error: err.message });
+    // Handle duplicate email
+    if (err.code === 11000 && err.keyValue?.email) {
+      return res.status(400).json({
+        message: "This email is already registered. Please use another email.",
+      });
+    }
+
+    res.status(400).json({
+      message: "Error creating account from backend",
+      error: err.message,
+    });
   }
 };
+
+// User Login
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user and populate subscription
+    // Find user and populate subscription for seller
     const user = await User.findOne({ email }).populate("subscription");
     if (!user)
       return res
         .status(401)
         .json({ code: "INVALID", message: "Invalid credentials" });
 
-    // Check password
+    // Verify password
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res
@@ -40,7 +52,7 @@ export const login = async (req, res) => {
         .status(403)
         .json({ code: "INACTIVE", message: "Account not active" });
 
-    // Only for sellers: check subscription
+    // Seller: check subscription
     let subscriptionStatus = null;
     let subscriptionEndDate = null;
 
@@ -55,19 +67,18 @@ export const login = async (req, res) => {
           .status(403)
           .json({ code: "EXPIRED", message: "Subscription expired" });
       }
-
       subscriptionStatus = user.subscription.status;
       subscriptionEndDate = user.subscription.endDate;
     }
 
-    // Successful login response
+    // Respond with token and user info
     res.json({
       token: generateToken(user),
       role: user.role,
       userId: user._id,
       isLoggedIn: true,
-      subscriptionStatus, // null for non-sellers
-      subscriptionEndDate, // null for non-sellers
+      subscriptionStatus,
+      subscriptionEndDate,
     });
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });

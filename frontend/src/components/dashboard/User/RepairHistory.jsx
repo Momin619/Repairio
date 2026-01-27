@@ -8,40 +8,45 @@ import debounce from "lodash.debounce";
 
 export default function RepairHistory() {
   const [repairs, setRepairs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchRepairs = async (searchTerm = "", pageNum = 1) => {
+  // SAME LOGIC AS RepairItemList
+  const fetchRepairs = useCallback(async (searchTerm = "", pageNum = 1) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
+
       const res = await API.get(
         `/repair-items/history/completed?search=${searchTerm}&page=${pageNum}&limit=12`,
       );
-      if (pageNum === 1) {
-        setRepairs(res.data.items);
-      } else {
-        setRepairs((prev) => [...prev, ...res.data.items]);
-      }
+
+      const fetched = res.data.items || [];
+
+      if (pageNum === 1) setRepairs(fetched);
+      else setRepairs((prev) => [...prev, ...fetched]);
+
       setTotalPages(res.data.totalPages);
       setHasMore(pageNum < res.data.totalPages);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch repairs");
-      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, []);
 
-  // Debounced search function
+  // Debounced search (fixed)
   const debouncedSearch = useCallback(
     debounce((value) => {
       setPage(1);
       fetchRepairs(value, 1);
     }, 500),
-    [],
+    [fetchRepairs],
   );
 
   const handleSearchChange = (e) => {
@@ -50,27 +55,27 @@ export default function RepairHistory() {
     debouncedSearch(value);
   };
 
-  // Load more for pagination
   const loadMore = () => {
+    if (page >= totalPages) return;
     const nextPage = page + 1;
     setPage(nextPage);
     fetchRepairs(search, nextPage);
   };
 
-  // Initial load
   useEffect(() => {
     fetchRepairs();
-  }, []);
+    return () => debouncedSearch.cancel();
+  }, [fetchRepairs, debouncedSearch]);
 
   if (loading && page === 1) return <Loader />;
 
   return (
-    <div className="min-h-screen px-4 py-8 bg-gray-50 dark:bg-black">
+    <div className="min-h-screen px-4 py-8 pb-24 bg-gray-50 dark:bg-black md:pb-8">
       <h1 className="mb-6 text-3xl font-bold text-gray-800 dark:text-white">
         Repair History
       </h1>
 
-      {/* Search Bar */}
+      {/* Search Bar – UNCHANGED */}
       <div className="mb-6">
         <label htmlFor="repair-search" className="sr-only">
           Search repairs
@@ -95,6 +100,7 @@ export default function RepairHistory() {
         </p>
       ) : (
         <>
+          {/* UI BELOW IS 100% SAME */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {repairs.map((item) => (
               <div
@@ -176,14 +182,14 @@ export default function RepairHistory() {
             ))}
           </div>
 
-          {/* Load more button */}
           {hasMore && (
             <div className="flex justify-center mt-8">
               <button
                 onClick={loadMore}
-                className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700"
+                disabled={loadingMore}
+                className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? "Loading..." : "Load More"}
+                {loadingMore ? "Loading..." : "Load More"}
               </button>
             </div>
           )}

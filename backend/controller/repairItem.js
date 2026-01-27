@@ -1,14 +1,19 @@
 import RepairItem from "../model/repairItem.js";
+import User from "../model/user.js";
 import { toWhatsAppNumber } from "../utils/phoneNumber.js";
+
 // Create a new repair item
+
 export const repairItemCreate = async (req, res) => {
   try {
     const { itemName, problem, customer } = req.body;
 
+    // Check required fields
     if (!itemName || !problem || !customer) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Parse customer JSON string into object
     let parsedCustomer;
     try {
       parsedCustomer = JSON.parse(customer);
@@ -16,16 +21,18 @@ export const repairItemCreate = async (req, res) => {
       return res.status(400).json({ message: "Invalid customer data" });
     }
 
+    // Map uploaded files to image paths
     const images = req.files
       ? req.files.map((file) => `/uploads/repair-items/${file.filename}`)
       : [];
 
+    // Create repair item
     const repairItem = await RepairItem.create({
       itemName,
       problem,
       customer: parsedCustomer,
       images,
-      sellerId: req.user._id,
+      sellerId: req.user._id, // seller is logged-in user
     });
 
     res.status(201).json({
@@ -38,24 +45,27 @@ export const repairItemCreate = async (req, res) => {
   }
 };
 
-// Get all repair items for seller
+// List repair items for seller (in-repair)
+
 export const repairItemList = async (req, res) => {
   try {
     const { page = 1, limit = 12, search = "" } = req.query;
 
+    // Search filter
     const query = {
       sellerId: req.user._id,
       status: "in-repair",
       $or: [
         { itemName: { $regex: search, $options: "i" } },
-        { customerName: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
+        { "customer.name": { $regex: search, $options: "i" } },
+        { "customer.phone": { $regex: search, $options: "i" } },
       ],
     };
 
     const totalItems = await RepairItem.countDocuments(query);
     const totalPages = Math.ceil(totalItems / limit);
 
+    // Fetch paginated items
     const items = await RepairItem.find(query)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -67,15 +77,18 @@ export const repairItemList = async (req, res) => {
   }
 };
 
-// Get a single repair item by ID
+// Get repair item by ID
+
 export const repairItemGetById = async (req, res) => {
   try {
     const item = await RepairItem.findById(req.params.id).populate(
       "sellerId",
       "name email",
     );
+
     if (!item)
       return res.status(404).json({ message: "Repair item not found" });
+
     res.status(200).json(item);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -83,13 +96,21 @@ export const repairItemGetById = async (req, res) => {
 };
 
 // Update repair item status
+
 export const repairItemUpdateStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
+    // 1️⃣ Find repair item
     const item = await RepairItem.findById(req.params.id);
-    if (!item) {
+    if (!item)
       return res.status(404).json({ message: "Repair item not found" });
+
+    // 2️⃣ Ownership check
+    if (item.sellerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You are not allowed to update this repair item",
+      });
     }
 
     item.status = status;
@@ -98,22 +119,27 @@ export const repairItemUpdateStatus = async (req, res) => {
     if (status === "completed") {
       item.completedAt = new Date();
 
-      // Check if customer and phone exist
-      const phone = item.customer?.phone;
-      if (!phone) {
+      // 3️⃣ Customer phone
+      const customerPhone = item.customer?.phone;
+      if (!customerPhone)
         return res
           .status(400)
           .json({ message: "Customer phone number not found" });
-      }
 
+      // 4️⃣ Seller phone
+      const seller = await User.findById(req.user._id);
+      if (!seller?.phoneNumber)
+        return res
+          .status(400)
+          .json({ message: "Seller phone number not found" });
+
+      // 5️⃣ WhatsApp link generation
       try {
-        const whatsappNumber = toWhatsAppNumber(phone);
+        const customerWhatsApp = toWhatsAppNumber(customerPhone);
+        const message = `Hello ${item.customer.name}, Your repair item (${item.itemName}) has been completed. Thank you!`;
 
-        const message = `Hello ${item.customer.name},
-Your repair item (${item.itemName}) has been completed.
-Thank you for choosing us!`;
-
-        whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        // Opens WhatsApp chat; actual sending requires API
+        whatsappLink = `https://wa.me/${customerWhatsApp}?text=${encodeURIComponent(
           message,
         )}`;
       } catch (err) {
@@ -125,11 +151,10 @@ Thank you for choosing us!`;
 
     await item.save();
 
-    // Send updated item + WhatsApp link to frontend
     res.status(200).json({
       message: "Repair item status updated",
       item,
-      whatsappLink, // null if not completed or phone invalid
+      whatsappLink,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -137,6 +162,7 @@ Thank you for choosing us!`;
 };
 
 // Delete repair item
+
 export const repairItemDelete = async (req, res) => {
   try {
     const item = await RepairItem.findByIdAndDelete(req.params.id);
@@ -149,12 +175,12 @@ export const repairItemDelete = async (req, res) => {
   }
 };
 
-// Fetch repair history (all completed items for seller)
+// Repair history (completed items)
+
 export const repairItemHistory = async (req, res) => {
   try {
     const { search = "", page = 1, limit = 12 } = req.query;
 
-    // Build search filter
     const searchFilter = {
       sellerId: req.user._id,
       status: "completed",
@@ -165,31 +191,27 @@ export const repairItemHistory = async (req, res) => {
       ],
     };
 
-    // Count total matching items
     const totalItems = await RepairItem.countDocuments(searchFilter);
 
-    // Fetch items with pagination
     const completedItems = await RepairItem.find(searchFilter)
-      .sort({ completedAt: -1 }) // newest first
+      .sort({ completedAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
       .lean();
 
-    // Map extra fields
     const itemsWithExtras = completedItems.map((item) => {
       let whatsappLink = null;
 
       if (item.customer?.phone) {
         try {
           const whatsappNumber = toWhatsAppNumber(item.customer.phone);
-          const message = `Hello ${item.customer.name}, Your repair item (${item.itemName}) has been completed. Thank you for choosing us!`;
+          const message = `Hello ${item.customer.name}, Your repair item (${item.itemName}) has been completed. Thank you!`;
           whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
         } catch {
           whatsappLink = null;
         }
       }
 
-      // ⏱ Time calculation
       let timeTakenValue = null;
       let timeTakenUnit = null;
 
@@ -206,7 +228,6 @@ export const repairItemHistory = async (req, res) => {
         }
       }
 
-      // 📅 Completion date & time
       const completedDate = item.completedAt
         ? new Date(item.completedAt).toLocaleDateString()
         : null;
@@ -228,7 +249,6 @@ export const repairItemHistory = async (req, res) => {
       };
     });
 
-    // Total pages
     const totalPages = Math.ceil(totalItems / limit);
 
     res.status(200).json({
@@ -241,6 +261,9 @@ export const repairItemHistory = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Middleware: Check seller subscription active
+
 export const sellerSubscriptionActive = (req, res, next) => {
   if (req.user && req.user.role === "seller") {
     const subscription = req.user.subscription;

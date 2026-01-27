@@ -76,7 +76,7 @@ export default function RepairItemList() {
   if (loading && page === 1) return <Loader />;
 
   return (
-    <div className="max-w-6xl px-4 mx-auto space-y-6 pt-14 sm:pt-16 md:pt-20 lg:pt-24 xl:pt-28">
+    <div className="max-w-6xl px-4 pb-24 mx-auto space-y-6 pt-14 sm:pt-16 md:pt-20 lg:pt-24 xl:pt-28 md:pb-8">
       {/* Search Bar */}
       <div className="relative max-w-md mx-auto mb-6">
         <FaSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2 dark:text-gray-500" />
