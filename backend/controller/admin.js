@@ -52,10 +52,15 @@ export const adminLogin = async (req, res) => {
     }
 
     console.log(admin); // Optional: debug info
-
+    const token = generateToken(admin);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     // Respond with JWT token and admin info
     res.json({
-      token: generateToken(admin), // token to authenticate future requests
       role: "admin",
       userId: admin._id,
       isLoggedIn: true,

@@ -4,31 +4,27 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
-import toast from "react-hot-toast"; // ✅ import toast
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+
 export default function Login() {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({ mode: "onChange" });
+
   const navigate = useNavigate();
-  const { setAuth } = useAuth();
+  const { login } = useAuth(); // ✅ FIXED
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {
     try {
       const res = await API.post("/user/login", data);
 
-      // Save auth info in context
-      setAuth({
-        token: res.data.token,
-        role: res.data.role,
-        userId: res.data.userId,
-        isLoggedIn: res.data.isLoggedIn,
-      });
-
-      // Store subscription info in localStorage (for sellers)
+      // ✅ JWT is stored in httpOnly cookie
+      // ✅ Save auth info using context helper
+      login(res.data);
 
       toast.success("Login successful!");
       navigate("/dashboard");
@@ -37,7 +33,7 @@ export default function Login() {
 
       if (code === "EXPIRED") {
         toast.error(err.response.data.message || "Subscription expired");
-        navigate("/subscription-expired"); // optional page for expired subscription
+        navigate("/subscription-expired");
       } else if (code === "INACTIVE") {
         toast.error(err.response.data.message || "Account not active");
       } else if (code === "INVALID") {

@@ -71,9 +71,16 @@ export const login = async (req, res) => {
       subscriptionEndDate = user.subscription.endDate;
     }
 
+    const token = generateToken(user);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     // Respond with token and user info
     res.json({
-      token: generateToken(user),
       role: user.role,
       userId: user._id,
       isLoggedIn: true,

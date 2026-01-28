@@ -1,54 +1,59 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import API from "../api/api.js";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-
   const [auth, setAuth] = useState({
-    token: localStorage.getItem("token"),
-    role: localStorage.getItem("role"), // "user" | "admin"
-    userId: localStorage.getItem("userId"),
-    isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
+    isLoggedIn: false,
+    role: null,
+    userId: null,
   });
-
-  // Sync axios + localStorage
-  useEffect(() => {
-    if (auth.token) {
-      axios.defaults.headers.common.Authorization = `Bearer ${auth.token}`;
-      localStorage.setItem("token", auth.token);
-      localStorage.setItem("role", auth.role);
-      localStorage.setItem("userId", auth.userId);
-      localStorage.setItem("isLoggedIn", "true");
-    } else {
-      delete axios.defaults.headers.common.Authorization;
-      localStorage.clear();
-    }
-  }, [auth]);
-
-  // ✅ ROLE-AWARE LOGOUT
-  const logout = () => {
-    const role = auth.role;
-
+  const [loading, setLoading] = useState(true);
+  const login = (data) => {
     setAuth({
-      token: null,
-      role: null,
-      userId: null,
-      isLoggedIn: false,
+      isLoggedIn: true,
+      role: data.role,
+      userId: data.userId,
     });
+  };
 
-    // redirect after logout
-    if (role === "admin") {
-      navigate("/admin/login", { replace: true });
-    } else {
-      navigate("/login", { replace: true });
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await API.get("/auth/me");
+        login(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.log("not logged in or token expired", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const logout = async () => {
+    const currentRole = auth.role; // capture role before clearing
+
+    setAuth({ isLoggedIn: false, role: null, userId: null });
+
+    try {
+      if (currentRole === "admin") {
+        await API.post("/admin/logout", {}, { withCredentials: true });
+        navigate("/admin/login", { replace: true });
+      } else {
+        await API.post("/user/logout", {}, { withCredentials: true });
+        navigate("/login", { replace: true });
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ auth, setAuth, logout }}>
+    <AuthContext.Provider value={{ auth, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,7 +5,8 @@ import adminRouter from "./routes/admin.js";
 import repairItemRouter from "./routes/repairItem.js";
 import connectDB from "./utils/connectMongodb.js";
 import cors from "cors";
-
+import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth.js";
 import path from "path";
 dotenv.config();
 connectDB();
@@ -19,7 +20,8 @@ app.use(
   }),
 );
 app.use(express.json());
-
+app.use(cookieParser());
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api", repairItemRouter);

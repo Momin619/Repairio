@@ -28,7 +28,7 @@ export default function ResponsiveAppBar() {
   const authLinks = isLoggedIn
     ? [
         { name: "Settings", to: "/settings" },
-        { name: "Logout", action: logout },
+        { name: "Logout", action: () => logout() },
       ]
     : [
         { name: "Login", to: "/login" },

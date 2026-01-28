@@ -2,36 +2,18 @@ import jwt from "jsonwebtoken";
 import User from "../model/user.js";
 import Admin from "../model/admin.js";
 
-// ============================
 // Middleware: Protect Routes
 // Ensures the request has a valid JWT and attaches the user/admin to req
-// ============================
+
 export const protect = async (req, res, next) => {
-  console.log("Protect middleware called");
+  let token = req.cookies.token;
 
-  let token;
-
-  // 1️⃣ Check if Authorization header exists and starts with "Bearer"
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    // Extract token from header
-    token = req.headers.authorization.split(" ")[1];
-  }
-
-  // 2️⃣ If no token found, return 401
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
-  }
+  if (!token) return res.status(401).json({ message: "No token" });
 
   try {
-    // 3️⃣ Decode token WITHOUT verification first to check role
-    //    This is safe because we only want to know which secret to use
     const decodedUnverified = jwt.decode(token);
     if (!decodedUnverified) throw new Error("Invalid token");
 
-    // 4️⃣ Choose the correct secret based on role in token
     let secret;
     switch (decodedUnverified.role) {
       case "admin":
@@ -41,35 +23,34 @@ export const protect = async (req, res, next) => {
         secret = process.env.JWT_SECRET_SELLER;
         break;
       default:
-        return res.status(401).json({ message: "Invalid role in token" });
+        return res.status(401).json({ message: "Invalid role" });
     }
 
-    // 5️⃣ Verify token with the correct role-specific secret
     const decoded = jwt.verify(token, secret);
+    console.log("Decoded JWT:", decoded);
 
-    // 6️⃣ Attach user or admin to request object for next middleware/routes
+    let userFound = null;
+
     if (decoded.role === "admin") {
-      // Admin: fetch from Admin collection
-      const admin = await Admin.findById(decoded.id).select("-password");
-      if (!admin) return res.status(401).json({ message: "Admin not found" });
-      req.admin = admin;
-      req.role = "admin";
+      userFound = await Admin.findById(decoded.id).select("-password");
+      req.admin = userFound;
     } else {
-      // User/Seller: fetch from User collection
-      const user = await User.findById(decoded.id)
+      userFound = await User.findById(decoded.id)
         .select("-password")
-        .populate("subscription"); // Include subscription info for seller
-      if (!user) return res.status(401).json({ message: "User not found" });
-      req.user = user;
-      req.role = decoded.role;
+        .populate("subscription");
+      req.user = userFound;
     }
 
-    console.log("token", token);
+    console.log("DB result:", userFound);
 
-    // ✅ Token is valid, move to next middleware/route handler
+    if (!userFound) {
+      return res.status(401).json({ message: "User not found in DB" });
+    }
+
+    req.role = decoded.role;
     next();
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(401).json({ message: "Token invalid or expired" });
   }
 };

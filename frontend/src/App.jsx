@@ -42,7 +42,7 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute allowedRoles={"seller"}>
+            <ProtectedRoute allowedRoles={["seller"]}>
               <UserDashboardPage />
             </ProtectedRoute>
           }
@@ -58,7 +58,7 @@ export default function App() {
         <Route
           path="/repair-history"
           element={
-            <ProtectedRoute allowedRoles={"seller"}>
+            <ProtectedRoute allowedRoles={["seller"]}>
               <RepairHistoryPage />
             </ProtectedRoute>
           }
@@ -67,7 +67,7 @@ export default function App() {
         <Route
           path="/user/:userId"
           element={
-            <ProtectedRoute allowedRoles={"admin"}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               <AdminUserDetailsPage />
             </ProtectedRoute>
           }

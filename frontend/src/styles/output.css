@@ -760,6 +760,9 @@
   .capitalize {
     text-transform: capitalize;
   }
+  .underline {
+    text-decoration-line: underline;
+  }
   .placeholder-black {
     &::placeholder {
       color: var(--color-black);

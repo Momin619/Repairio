@@ -13,19 +13,13 @@ export default function AdminLogin() {
     formState: { errors, isSubmitting },
   } = useForm({ mode: "onChange" });
   const navigate = useNavigate();
-  const { setAuth } = useAuth();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {
     try {
       const res = await API.post("/admin/login", data);
-      setAuth({
-        token: res.data.token,
-        role: "admin",
-        userId: res.data.userId,
-        isLoggedIn: res.data.isLoggedIn,
-      });
-
+      login(res.data);
       toast.success("Admin login successful!");
       navigate("/admin/dashboard");
     } catch (err) {

@@ -2,6 +2,8 @@ import express from "express";
 
 import { login, signup } from "../controller/user.js";
 
+import { logout } from "../utils/logout.js";
+
 import { checkSubscription } from "../controller/adminUserManagment.js";
 
 import { protect } from "../middlewares/auth.js";
@@ -12,8 +14,8 @@ userRouter.post("/signup", signup);
 
 userRouter.post("/login", login);
 
-userRouter.get("/dashboard", protect, checkSubscription);
+userRouter.post("/logout", logout);
 
-console.log("User routes loaded");
+userRouter.get("/dashboard", protect, checkSubscription);
 
 export default userRouter;

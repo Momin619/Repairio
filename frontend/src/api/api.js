@@ -1,17 +1,9 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "http://192.168.100.7:4500/api",
-  withCredentials: true,
-});
+const baseURL = import.meta.env.VITE_BASE_URL;
 
-export const setToken = (token) => {
-  if (token) API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  else delete API.defaults.headers.common["Authorization"];
-};
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token"); // always up-to-date
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+const API = axios.create({
+  baseURL: baseURL,
+  withCredentials: true,
 });
 export default API;

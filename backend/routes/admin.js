@@ -7,7 +7,7 @@ import {
   updateSubscription,
 } from "../controller/adminUserManagment.js";
 import { protect, isAdmin } from "../middlewares/auth.js";
-
+import { logout } from "../utils/logout.js";
 const adminRouter = express.Router();
 
 // Admin auth
@@ -30,5 +30,5 @@ adminRouter.post(
   updateSubscription,
 );
 adminRouter.get("/user/:userId", protect, isAdmin, getUser);
-
+adminRouter.post("/logout", logout);
 export default adminRouter;

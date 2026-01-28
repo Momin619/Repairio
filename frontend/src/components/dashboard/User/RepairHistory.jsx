@@ -109,7 +109,7 @@ export default function RepairHistory() {
               >
                 {item.images?.[0] && (
                   <img
-                    src={`http://localhost:4500/${item.images[0]}`}
+                    src={`http://localhost:4500${item.images[0]}`}
                     alt={item.itemName}
                     className="object-cover w-full h-40 mb-4 rounded"
                   />
