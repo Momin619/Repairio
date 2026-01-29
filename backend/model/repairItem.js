@@ -4,6 +4,7 @@ const repairItemSchema = new mongoose.Schema(
   {
     itemName: { type: String, required: true },
     problem: { type: String, required: true },
+    repairCost: { type: Number, required: true },
     customer: {
       name: { type: String, required: true },
       phone: { type: String, required: true },

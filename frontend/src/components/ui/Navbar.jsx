@@ -42,6 +42,7 @@ export default function ResponsiveAppBar() {
           { name: "Dashboard", to: "/dashboard" },
           { name: "Add Item", to: "/repair-item" },
           { name: "Repair History", to: "/repair-history" },
+          { name: "Revenue", to: "/revenue" },
         ]
       : [];
 

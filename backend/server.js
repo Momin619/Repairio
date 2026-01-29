@@ -8,25 +8,35 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.js";
 import path from "path";
+
 dotenv.config();
+
 connectDB();
+
 const app = express();
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://192.168.100.7:5173"],
     credentials: true,
   }),
 );
+
 app.use(express.json());
+
 app.use(cookieParser());
+
 app.use("/api/auth", authRouter);
+
 app.use("/api/user", userRouter);
+
 app.use("/api/admin", adminRouter);
 app.use("/api", repairItemRouter);
 
 const PORT = process.env.PORT;
+
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on http://localhost:${PORT}`),
 );

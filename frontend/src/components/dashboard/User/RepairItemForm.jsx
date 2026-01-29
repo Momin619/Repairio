@@ -18,6 +18,7 @@ export default function RepairItemForm() {
       const formData = new FormData();
       formData.append("itemName", data.itemName);
       formData.append("problem", data.problem);
+      formData.append("repairCost", data.repairCost);
       formData.append(
         "customer",
         JSON.stringify({ name: data.customerName, phone: data.customerPhone }),
@@ -80,6 +81,23 @@ export default function RepairItemForm() {
             {errors.problem && (
               <p className="mt-1 text-sm text-red-500">
                 {errors.problem.message}
+              </p>
+            )}
+          </div>
+          {/* repairCost */}
+          <div>
+            <input
+              type="number"
+              {...register("repairCost", {
+                required: "Repair Cost is required",
+              })}
+              placeholder="Repair cost (in PKR)"
+              rows={3}
+              className="w-full p-2 border rounded-lg placeholder:text-black dark:placeholder:text-white sm:p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            />
+            {errors.repairCost && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.repairCost.message}
               </p>
             )}
           </div>

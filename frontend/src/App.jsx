@@ -21,6 +21,7 @@ import RepairHistoryPage from "./pages/Dashboard/User/RepairHistoryPage";
 import SellerDock from "./components/ui/SellerDock";
 import { useAuth } from "./context/AuthContext";
 import SettingPage from "./pages/Setting/SettingPage";
+import RevenuePage from "./pages/Dashboard/User/RevenuePage";
 export default function App() {
   const {
     auth: { role, isLoggedIn },
@@ -44,6 +45,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["seller"]}>
               <UserDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/revenue"
+          element={
+            <ProtectedRoute allowedRoles={["seller"]}>
+              <RevenuePage />
             </ProtectedRoute>
           }
         />

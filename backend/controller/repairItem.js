@@ -6,10 +6,10 @@ import { toWhatsAppNumber } from "../utils/phoneNumber.js";
 
 export const repairItemCreate = async (req, res) => {
   try {
-    const { itemName, problem, customer } = req.body;
+    const { itemName, problem, customer, repairCost } = req.body;
 
     // Check required fields
-    if (!itemName || !problem || !customer) {
+    if (!itemName || !problem || !customer || !repairCost) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -30,6 +30,7 @@ export const repairItemCreate = async (req, res) => {
     const repairItem = await RepairItem.create({
       itemName,
       problem,
+      repairCost,
       customer: parsedCustomer,
       images,
       sellerId: req.user._id, // seller is logged-in user
@@ -276,4 +277,156 @@ export const sellerSubscriptionActive = (req, res, next) => {
     }
   }
   next();
+};
+
+//
+import mongoose from "mongoose";
+
+export const getRevenue = async (req, res) => {
+  try {
+    const sellerObjectId = new mongoose.Types.ObjectId(req.user._id);
+
+    const firstItem = await RepairItem.findOne({
+      sellerId: sellerObjectId,
+      status: "completed",
+    }).sort({ completedAt: 1 });
+
+    const lastItem = await RepairItem.findOne({
+      sellerId: sellerObjectId,
+      status: "completed",
+    }).sort({ completedAt: -1 });
+
+    if (!firstItem || !lastItem) {
+      return res.json({ daily: [], weekly: [], monthly: [] });
+    }
+
+    const startDate = new Date(firstItem.completedAt);
+    const endDate = new Date(lastItem.completedAt);
+
+    /* ---------- DAILY ---------- */
+    const dailyAgg = await RepairItem.aggregate([
+      { $match: { sellerId: sellerObjectId, status: "completed" } },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$completedAt",
+              timezone: "Asia/Karachi",
+            },
+          },
+          total: { $sum: "$repairCost" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const dailyMap = Object.fromEntries(dailyAgg.map((d) => [d._id, d.total]));
+
+    const daily = [];
+    const dayCursor = new Date(startDate);
+    dayCursor.setHours(0, 0, 0, 0);
+
+    while (dayCursor <= endDate) {
+      const dayStr = dayCursor.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Karachi",
+      });
+
+      daily.push({
+        date: dayStr,
+        total: dailyMap[dayStr] || 0,
+      });
+
+      dayCursor.setDate(dayCursor.getDate() + 1);
+    }
+
+    /* ---------- WEEKLY (7-DAY BLOCKS FROM FIRST ITEM) ---------- */
+
+    /* ---------- WEEKLY (7-DAY BLOCKS, timezone-consistent) ---------- */
+    const weeklyAgg = await RepairItem.aggregate([
+      { $match: { sellerId: sellerObjectId, status: "completed" } },
+      {
+        $addFields: {
+          completedAtKarachi: {
+            $dateFromString: {
+              dateString: {
+                $dateToString: {
+                  date: "$completedAt",
+                  timezone: "Asia/Karachi",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          daysFromStart: {
+            $floor: {
+              $divide: [
+                { $subtract: ["$completedAtKarachi", startDate] },
+                1000 * 60 * 60 * 24,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { weekIndex: { $floor: { $divide: ["$daysFromStart", 7] } } },
+          total: { $sum: "$repairCost" },
+        },
+      },
+      { $sort: { "_id.weekIndex": 1 } },
+    ]);
+
+    const weekly = weeklyAgg.map((w) => {
+      const weekStart = new Date(startDate);
+      weekStart.setDate(weekStart.getDate() + w._id.weekIndex * 7);
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      // Convert to Asia/Karachi ISO-like string
+      const startStr = weekStart.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Karachi",
+      });
+      const endStr = weekEnd.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Karachi",
+      });
+
+      return {
+        week: w._id.weekIndex + 1,
+        total: w.total,
+        start: startStr,
+        end: endStr,
+      };
+    });
+
+    /* ---------- MONTHLY ---------- */
+    const monthlyAgg = await RepairItem.aggregate([
+      { $match: { sellerId: sellerObjectId, status: "completed" } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$completedAt" },
+            month: { $month: "$completedAt" },
+          },
+          total: { $sum: "$repairCost" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+    ]);
+
+    const monthly = monthlyAgg.map((m) => ({
+      year: m._id.year,
+      month: m._id.month,
+      total: m.total,
+    }));
+
+    res.json({ daily, weekly, monthly });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
