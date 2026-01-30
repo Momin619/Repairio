@@ -9,6 +9,7 @@ import {
   repairItemUpdateStatus,
   sellerSubscriptionActive,
   getRevenue,
+  trackRepairItem,
 } from "../controller/repairItem.js";
 
 import { protect } from "../middlewares/auth.js";
@@ -18,6 +19,8 @@ import { upload } from "../utils/multer.js";
 const repairItemRouter = express.Router();
 
 repairItemRouter.get("/revenue", protect, sellerSubscriptionActive, getRevenue);
+
+repairItemRouter.get("/repairs/track/:token", trackRepairItem);
 
 repairItemRouter.post(
   "/repair-item",

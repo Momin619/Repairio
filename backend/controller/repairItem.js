@@ -4,6 +4,24 @@ import { toWhatsAppNumber } from "../utils/phoneNumber.js";
 
 // Create a new repair item
 
+export const trackRepairItem = async (req, res) => {
+  try {
+    const item = await RepairItem.findOne({
+      trackingToken: req.params.token,
+    }).select(
+      "itemName problem status repairCost createdAt completedAt customer.name",
+    );
+
+    if (!item) {
+      return res.status(404).json({ message: "Invalid tracking link" });
+    }
+
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const repairItemCreate = async (req, res) => {
   try {
     const { itemName, problem, customer, repairCost } = req.body;
@@ -35,10 +53,25 @@ export const repairItemCreate = async (req, res) => {
       images,
       sellerId: req.user._id, // seller is logged-in user
     });
+    const trackingLink = `${process.env.FRONTEND_URL}/track/${repairItem.trackingToken}`;
+    const customerWhatsApp = toWhatsAppNumber(parsedCustomer.phone);
+
+    const message = `Assalam Alaikum ${parsedCustomer.name},
+Your repair item has been registered.
+
+Item: ${itemName}
+Status: In Repair
+
+Track your repair here:
+${trackingLink}`;
+
+    const whatsappLink = `https://wa.me/${customerWhatsApp}?text=${encodeURIComponent(message)}`;
 
     res.status(201).json({
       message: "Repair item created",
       repairItem,
+      trackingLink,
+      whatsappLink,
     });
   } catch (err) {
     console.error(err);
@@ -286,65 +319,28 @@ export const getRevenue = async (req, res) => {
   try {
     const sellerObjectId = new mongoose.Types.ObjectId(req.user._id);
 
-    const firstItem = await RepairItem.findOne({
+    // 🔹 First completed repair (THIS defines Day 1)
+    const firstCompleted = await RepairItem.findOne({
       sellerId: sellerObjectId,
       status: "completed",
     }).sort({ completedAt: 1 });
 
-    const lastItem = await RepairItem.findOne({
-      sellerId: sellerObjectId,
-      status: "completed",
-    }).sort({ completedAt: -1 });
-
-    if (!firstItem || !lastItem) {
-      return res.json({ daily: [], weekly: [], monthly: [] });
+    if (!firstCompleted) {
+      return res.json({ monthly: [] });
     }
 
-    const startDate = new Date(firstItem.completedAt);
-    const endDate = new Date(lastItem.completedAt);
+    const startDate = new Date(firstCompleted.completedAt);
 
-    /* ---------- DAILY ---------- */
-    const dailyAgg = await RepairItem.aggregate([
-      { $match: { sellerId: sellerObjectId, status: "completed" } },
+    /* ---------- ROLLING 30-DAY MONTHS ---------- */
+    const monthlyAgg = await RepairItem.aggregate([
       {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$completedAt",
-              timezone: "Asia/Karachi",
-            },
-          },
-          total: { $sum: "$repairCost" },
+        $match: {
+          sellerId: sellerObjectId,
+          status: "completed",
         },
       },
-      { $sort: { _id: 1 } },
-    ]);
 
-    const dailyMap = Object.fromEntries(dailyAgg.map((d) => [d._id, d.total]));
-
-    const daily = [];
-    const dayCursor = new Date(startDate);
-    dayCursor.setHours(0, 0, 0, 0);
-
-    while (dayCursor <= endDate) {
-      const dayStr = dayCursor.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Karachi",
-      });
-
-      daily.push({
-        date: dayStr,
-        total: dailyMap[dayStr] || 0,
-      });
-
-      dayCursor.setDate(dayCursor.getDate() + 1);
-    }
-
-    /* ---------- WEEKLY (7-DAY BLOCKS FROM FIRST ITEM) ---------- */
-
-    /* ---------- WEEKLY (7-DAY BLOCKS, timezone-consistent) ---------- */
-    const weeklyAgg = await RepairItem.aggregate([
-      { $match: { sellerId: sellerObjectId, status: "completed" } },
+      // Normalize completedAt to Karachi timezone
       {
         $addFields: {
           completedAtKarachi: {
@@ -359,6 +355,8 @@ export const getRevenue = async (req, res) => {
           },
         },
       },
+
+      // Days since first completed item
       {
         $addFields: {
           daysFromStart: {
@@ -371,60 +369,42 @@ export const getRevenue = async (req, res) => {
           },
         },
       },
-      {
-        $group: {
-          _id: { weekIndex: { $floor: { $divide: ["$daysFromStart", 7] } } },
-          total: { $sum: "$repairCost" },
-        },
-      },
-      { $sort: { "_id.weekIndex": 1 } },
-    ]);
 
-    const weekly = weeklyAgg.map((w) => {
-      const weekStart = new Date(startDate);
-      weekStart.setDate(weekStart.getDate() + w._id.weekIndex * 7);
-
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-
-      // Convert to Asia/Karachi ISO-like string
-      const startStr = weekStart.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Karachi",
-      });
-      const endStr = weekEnd.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Karachi",
-      });
-
-      return {
-        week: w._id.weekIndex + 1,
-        total: w.total,
-        start: startStr,
-        end: endStr,
-      };
-    });
-
-    /* ---------- MONTHLY ---------- */
-    const monthlyAgg = await RepairItem.aggregate([
-      { $match: { sellerId: sellerObjectId, status: "completed" } },
+      // 30-day rolling month index
       {
         $group: {
           _id: {
-            year: { $year: "$completedAt" },
-            month: { $month: "$completedAt" },
+            periodIndex: {
+              $floor: { $divide: ["$daysFromStart", 30] },
+            },
           },
           total: { $sum: "$repairCost" },
         },
       },
-      { $sort: { "_id.year": 1, "_id.month": 1 } },
+
+      { $sort: { "_id.periodIndex": 1 } },
     ]);
 
-    const monthly = monthlyAgg.map((m) => ({
-      year: m._id.year,
-      month: m._id.month,
-      total: m.total,
-    }));
+    const monthly = monthlyAgg.map((m) => {
+      const periodStart = new Date(startDate);
+      periodStart.setDate(periodStart.getDate() + m._id.periodIndex * 30);
 
-    res.json({ daily, weekly, monthly });
+      const periodEnd = new Date(periodStart);
+      periodEnd.setDate(periodStart.getDate() + 29);
+
+      return {
+        cycle: `Month ${m._id.periodIndex + 1}`,
+        start: periodStart.toLocaleDateString("en-CA", {
+          timeZone: "Asia/Karachi",
+        }),
+        end: periodEnd.toLocaleDateString("en-CA", {
+          timeZone: "Asia/Karachi",
+        }),
+        total: m.total,
+      };
+    });
+
+    res.json({ monthly });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

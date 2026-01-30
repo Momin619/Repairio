@@ -9,7 +9,7 @@ const SELLER_ID = "69770d2e0db4aefd95ce5aad";
 
 const YEAR = 2026;
 const START_MONTH = 0; // January (0-based)
-const TOTAL_MONTHS = 2; // Jan → Jun
+const TOTAL_MONTHS = 6; // Jan → Jun
 
 async function seed() {
   try {

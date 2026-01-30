@@ -1,6 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import "./styles/app.css";
+import "./styles/output.css";
 import LoginPage from "./pages/Auth/User/LoginPage";
 import SignupPage from "./pages/Auth/User/SignupPage";
 import UserDashboardPage from "./pages/Dashboard/User/UserDashboardPage";
@@ -14,32 +15,46 @@ import AdminSingupPage from "./pages/Auth/Admin/AdminSignupPage";
 import AdminDashboardPage from "./pages/Dashboard/Admin/AdminDashboardPage";
 import HomePage from "./pages/Home/HomePage";
 import AdminUserDetailsPage from "./pages/Dashboard/Admin/AdminUserDetailsPage";
-import "./styles/output.css";
-import "./styles/app.css";
 import SubscriptionExpired from "./components/ui/ErrorPages/SubscriptionExpired";
 import RepairHistoryPage from "./pages/Dashboard/User/RepairHistoryPage";
 import SellerDock from "./components/ui/SellerDock";
 import { useAuth } from "./context/AuthContext";
 import SettingPage from "./pages/Setting/SettingPage";
 import RevenuePage from "./pages/Dashboard/User/RevenuePage";
+import TrackRepairItemPage from "./pages/Dashboard/User/TrackRepairItemPage";
+
 export default function App() {
   const {
     auth: { role, isLoggedIn },
   } = useAuth();
 
+  // get current path
+  const location = useLocation();
+
+  // List of pages where Navbar/SellerDock should NOT be shown
+
+  // Function to check if current path is in hideLayoutPaths
+  const hideLayout = location.pathname.startsWith("/track/");
+
   return (
     <>
-      <Navbar />
       <Toaster position="top-center" />
 
+      {/* Only show Navbar if not a public tracking page */}
+      {!hideLayout && <Navbar />}
+
       <Routes>
+        {/* Public tracking page */}
+        <Route path="/track/:token" element={<TrackRepairItemPage />} />
+
+        {/* Other public routes */}
         <Route path="/subscription-expired" element={<SubscriptionExpired />} />
         <Route path="/settings" element={<SettingPage />} />
-        {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/" element={<HomePage />} />
-        {/* Protected routes */}
+
+        {/* Protected routes for seller */}
         <Route
           path="/dashboard"
           element={
@@ -72,7 +87,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* Admin-only route */}
+
+        {/* Admin-only */}
         <Route
           path="/user/:userId"
           element={
@@ -91,7 +107,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* No subscription */}
 
         {/* Unauthorized */}
         <Route path="/unauthorized" element={<Unauthorized />} />
@@ -99,7 +114,9 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {isLoggedIn && role === "seller" && <SellerDock />}
+
+      {/* Only show SellerDock if logged in as seller AND not on tracking page */}
+      {isLoggedIn && role === "seller" && !hideLayout && <SellerDock />}
     </>
   );
 }

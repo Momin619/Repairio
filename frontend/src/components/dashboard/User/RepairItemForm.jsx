@@ -21,7 +21,10 @@ export default function RepairItemForm() {
       formData.append("repairCost", data.repairCost);
       formData.append(
         "customer",
-        JSON.stringify({ name: data.customerName, phone: data.customerPhone }),
+        JSON.stringify({
+          name: data.customerName,
+          phone: data.customerPhone,
+        }),
       );
 
       if (data.images?.length) {
@@ -35,6 +38,12 @@ export default function RepairItemForm() {
       });
 
       toast.success(res.data.message);
+
+      // ✅ OPEN WHATSAPP WITH MESSAGE + TRACKING LINK
+      if (res.data.whatsappLink) {
+        window.open(res.data.whatsappLink, "_blank");
+      }
+
       reset();
     } catch (err) {
       toast.error(err.response?.data?.message || "Error creating repair item");

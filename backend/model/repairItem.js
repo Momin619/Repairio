@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "node:crypto";
 
 const repairItemSchema = new mongoose.Schema(
   {
@@ -25,8 +26,19 @@ const repairItemSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    trackingToken: {
+      type: String,
+      unique: true,
+      index: true,
+    },
   },
   { timestamps: true },
 );
+
+repairItemSchema.pre("save", async function () {
+  if (!this.trackingToken) {
+    this.trackingToken = crypto.randomBytes(16).toString("hex");
+  }
+});
 
 export default mongoose.model("RepairItem", repairItemSchema);
