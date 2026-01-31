@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../../api/api.js";
 import Loader from "@/components/ui/Loader.jsx";
-
+import toast from "react-hot-toast";
 function Revenue() {
   const [monthly, setMonthly] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +52,10 @@ function Revenue() {
         const res = await API.get("/revenue");
         setMonthly(res.data.monthly || []);
       } catch (err) {
+        // Axios response exists if server returned an error
+        const msg =
+          err.response?.data?.message || err.message || "Something went wrong";
+        toast.error(msg);
         console.error("Error fetching revenue:", err);
       } finally {
         setLoading(false);

@@ -32,60 +32,65 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user and populate subscription for seller
     const user = await User.findOne({ email }).populate("subscription");
     if (!user)
       return res
         .status(401)
         .json({ code: "INVALID", message: "Invalid credentials" });
 
-    // Verify password
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res
         .status(401)
         .json({ code: "INVALID", message: "Invalid credentials" });
 
-    // Check if account is active
     if (!user.isActive)
       return res
         .status(403)
         .json({ code: "INACTIVE", message: "Account not active" });
 
-    // Seller: check subscription
-    let subscriptionStatus = null;
-    let subscriptionEndDate = null;
+    let subscription = null;
 
+    // ✅ SELLER SUBSCRIPTION CHECK
     if (user.role === "seller") {
+      if (!user.subscription) {
+        return res
+          .status(403)
+          .json({ code: "NO_SUB", message: "No subscription" });
+      }
+
       const now = new Date();
-      if (
-        !user.subscription ||
-        user.subscription.status !== "active" ||
-        new Date(user.subscription.endDate) < now
-      ) {
+      const endDate = new Date(user.subscription.endDate);
+
+      // 🔥 EXACT TIME CHECK
+      if (now >= endDate) {
+        // mark expired ONCE
+        if (user.subscription.status !== "expired") {
+          user.subscription.status = "expired";
+          await user.subscription.save();
+        }
+
         return res
           .status(403)
           .json({ code: "EXPIRED", message: "Subscription expired" });
       }
-      subscriptionStatus = user.subscription.status;
-      subscriptionEndDate = user.subscription.endDate;
+
+      subscription = user.subscription;
     }
 
     const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
+      secure: false,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Respond with token and user info
     res.json({
       role: user.role,
       userId: user._id,
       isLoggedIn: true,
-      subscriptionStatus,
-      subscriptionEndDate,
+      subscription,
     });
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });

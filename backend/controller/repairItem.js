@@ -298,17 +298,34 @@ export const repairItemHistory = async (req, res) => {
 
 // Middleware: Check seller subscription active
 
-export const sellerSubscriptionActive = (req, res, next) => {
-  if (req.user && req.user.role === "seller") {
+export const sellerSubscriptionActive = async (req, res, next) => {
+  // Admin bypass
+
+  if (req.user?.role === "seller") {
     const subscription = req.user.subscription;
-    if (
-      !subscription ||
-      subscription.status !== "active" ||
-      new Date(subscription.endDate) < new Date()
-    ) {
-      return res.status(403).json({ message: "Your subscription has expired" });
+
+    if (!subscription) {
+      return res.status(403).json({ message: "No subscription" });
+    }
+
+    const now = new Date();
+    const endDate = new Date(subscription.endDate);
+
+    // ⏰ runtime expiry check
+    if (now >= endDate || subscription.status !== "active") {
+      // safety sync (in case login was not hit)
+      if (subscription.status !== "expired") {
+        subscription.status = "expired";
+        await subscription.save();
+      }
+
+      return res.status(403).json({
+        message: "Your subscription has expired",
+        code: "SUBSCRIPTION_EXPIRED",
+      });
     }
   }
+
   next();
 };
 

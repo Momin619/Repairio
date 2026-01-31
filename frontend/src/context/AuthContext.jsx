@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     isLoggedIn: false,
     role: null,
     userId: null,
+    subscription: null,
   });
   const [loading, setLoading] = useState(true);
   const login = (data) => {
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
       isLoggedIn: true,
       role: data.role,
       userId: data.userId,
+      subscription: data.subscription || null,
     });
   };
 
@@ -33,11 +35,40 @@ export const AuthProvider = ({ children }) => {
     };
     checkAuth();
   }, []);
+  useEffect(() => {
+    if (!auth.subscription?.endDate) return;
+
+    const endTime = new Date(auth.subscription.endDate).getTime();
+    const now = Date.now();
+    const timeLeft = endTime - now;
+
+    if (timeLeft <= 0) {
+      setAuth((prev) => ({
+        ...prev,
+        subscription: null,
+      }));
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAuth((prev) => ({
+        ...prev,
+        subscription: null,
+      }));
+    }, timeLeft);
+
+    return () => clearTimeout(timer);
+  }, [auth.subscription?.endDate]);
 
   const logout = async () => {
     const currentRole = auth.role; // capture role before clearing
 
-    setAuth({ isLoggedIn: false, role: null, userId: null });
+    setAuth({
+      isLoggedIn: false,
+      role: null,
+      userId: null,
+      subscription: null,
+    });
 
     try {
       if (currentRole === "admin") {

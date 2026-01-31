@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
-
 export default function RepairItemList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -47,7 +46,7 @@ export default function RepairItemList() {
     debounce((value) => {
       setPage(1);
       fetchItems(value, 1);
-    }, 500),
+    }, 800),
     [fetchItems],
   );
 

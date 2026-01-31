@@ -1,9 +1,9 @@
 import express from "express";
 import { protect } from "../middlewares/auth.js";
 
-const router = express.Router();
+const authRouter = express.Router();
 
-router.get("/me", protect, async (req, res) => {
+authRouter.get("/me", protect, async (req, res) => {
   try {
     if (req.role === "admin" && req.admin) {
       return res.json({
@@ -27,4 +27,4 @@ router.get("/me", protect, async (req, res) => {
   }
 });
 
-export default router;
+export default authRouter;

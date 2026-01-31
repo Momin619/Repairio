@@ -5,9 +5,9 @@ import Loader from "@/components/ui/Loader";
 import { FaWhatsapp, FaSearch } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import debounce from "lodash.debounce";
-
 export default function RepairHistory() {
   const [repairs, setRepairs] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,7 +45,7 @@ export default function RepairHistory() {
     debounce((value) => {
       setPage(1);
       fetchRepairs(value, 1);
-    }, 500),
+    }, 800),
     [fetchRepairs],
   );
 

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
 import RepairItem from "./model/repairItem.js";
+import crypto from "crypto";
 
 const MONGO_URI =
   "mongodb+srv://dbUser:dbUserPassword@repairio.dwekq6b.mongodb.net/test?retryWrites=true&w=majority";
@@ -16,12 +17,13 @@ async function seed() {
     const conn = await mongoose.connect(MONGO_URI);
     console.log("Connected to DB:", conn.connection.name);
 
+    // Optional: clear old data
+    await RepairItem.deleteMany({});
+
     const items = [];
 
     for (let m = 0; m < TOTAL_MONTHS; m++) {
       const month = START_MONTH + m;
-
-      // number of days in month
       const daysInMonth = new Date(YEAR, month + 1, 0).getDate();
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -51,6 +53,7 @@ async function seed() {
           createdAt,
           completedAt,
           sellerId: new mongoose.Types.ObjectId(SELLER_ID),
+          trackingToken: crypto.randomBytes(16).toString("hex"), // add unique token here
         });
       }
     }
