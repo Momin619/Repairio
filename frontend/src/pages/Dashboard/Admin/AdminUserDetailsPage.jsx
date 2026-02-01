@@ -1,5 +1,5 @@
 import React from "react";
-import AdminUserDetails from "@/components/dashboard/Admin/AdminUserDetails";
+import AdminUserDetails from "@/components/Dashboard/Admin/AdminUserDetails";
 export default function AdminUserDetailsPage() {
   return (
     <div>

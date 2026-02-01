@@ -15,7 +15,7 @@ export default function Login() {
   } = useForm({ mode: "onChange" });
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ FIXED
+  const { login, auth } = useAuth(); // ✅ FIXED
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {

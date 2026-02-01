@@ -2,6 +2,7 @@
 import React from "react";
 import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import { FiHome, FiPlusCircle, FiList } from "react-icons/fi";
+import { FaDollarSign } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -16,6 +17,7 @@ export default function SellerDock() {
     { name: "Dashboard", to: "/dashboard", icon: <FiHome /> },
     { name: "Add Item", to: "/repair-item", icon: <FiPlusCircle /> },
     { name: "Repair History", to: "/repair-history", icon: <FiList /> },
+    { name: "Revenue", to: "/revenue", icon: <FaDollarSign /> },
   ];
 
   const currentIndex = sellerLinks.findIndex(
@@ -44,12 +46,26 @@ export default function SellerDock() {
           setValue(newValue);
           navigate(sellerLinks[newValue].to);
         }}
+        sx={{
+          minHeight: 60,
+        }}
       >
         {sellerLinks.map((link) => (
           <BottomNavigationAction
             key={link.name}
             label={link.name}
             icon={link.icon}
+            sx={{
+              // Prevent text wrapping
+              "& .MuiBottomNavigationAction-label": {
+                whiteSpace: "nowrap",
+                fontSize: "0.75rem",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              },
+              minWidth: 0, // allow 4 items to fit
+              maxWidth: "25%", // divide equally
+            }}
           />
         ))}
       </BottomNavigation>

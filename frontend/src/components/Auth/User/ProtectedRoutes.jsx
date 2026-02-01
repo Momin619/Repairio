@@ -1,3 +1,4 @@
+// ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import Loader from "@/components/ui/Loader";
@@ -8,22 +9,25 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
     loading,
   } = useAuth();
 
-  // Wait until auth status is loaded
   if (loading) return <Loader />;
 
-  // If not logged in, redirect to login
   if (!isLoggedIn) return <Navigate to="/login" replace />;
 
-  // If subscription is expired or not present, redirect to subscribe page
-  if (role === "seller" && (!subscription || subscription.status !== "active"))
-    return <Navigate to="/subscription-expired" replace />;
+  // Seller subscription check
+  if (role === "seller") {
+    if (!subscription) return <Navigate to="/subscription-expired" replace />;
 
-  // Check role access
-  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-  if (!roles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+    if (subscription.status !== "active")
+      return <Navigate to="/subscription-expired" replace />;
+
+    const now = new Date();
+    const endDate = new Date(subscription.endDate);
+    if (now >= endDate) return <Navigate to="/subscription-expired" replace />;
   }
 
-  // User passed all checks, render children
+  // Role authorization
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  if (!roles.includes(role)) return <Navigate to="/unauthorized" replace />;
+
   return children;
 };

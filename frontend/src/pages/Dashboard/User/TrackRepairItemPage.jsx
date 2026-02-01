@@ -1,5 +1,5 @@
 import React from "react";
-import TrackRepairItem from "@/components/dashboard/User/TrackRepairItem";
+import TrackRepairItem from "@/components/Dashboard/User/TrackRepairItem";
 export default function TrackRepairItemPage() {
   return (
     <div>

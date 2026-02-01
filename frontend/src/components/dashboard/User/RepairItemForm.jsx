@@ -157,6 +157,7 @@ export default function RepairItemForm() {
               type="file"
               multiple
               accept="image/*"
+              capture="environment"
               {...register("images")}
               className="w-full p-2 border rounded-lg cursor-pointer dark:bg-gray-800 dark:text-white dark:border-gray-700"
             />

@@ -37,7 +37,6 @@ export const login = async (req, res) => {
       return res
         .status(401)
         .json({ code: "INVALID", message: "Invalid credentials" });
-
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res
@@ -61,6 +60,14 @@ export const login = async (req, res) => {
 
       const now = new Date();
       const endDate = new Date(user.subscription.endDate);
+      console.log("user", user);
+      console.log("subscription", user.subscription);
+      console.log("NOW:", new Date());
+      console.log("END DATE:", new Date(user.subscription.endDate));
+      console.log(
+        "NOW >= END DATE?",
+        new Date() >= new Date(user.subscription.endDate),
+      );
 
       // 🔥 EXACT TIME CHECK
       if (now >= endDate) {
@@ -90,7 +97,14 @@ export const login = async (req, res) => {
       role: user.role,
       userId: user._id,
       isLoggedIn: true,
-      subscription,
+      subscription: user.subscription
+        ? {
+            _id: user.subscription._id,
+            startDate: user.subscription.startDate,
+            endDate: user.subscription.endDate,
+            status: user.subscription.status,
+          }
+        : null,
     });
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });
