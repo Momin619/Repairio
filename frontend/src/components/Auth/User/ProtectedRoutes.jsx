@@ -11,7 +11,7 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (loading) return <Loader />;
 
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!isLoggedIn) return <Navigate to={"/login"} />;
 
   // Seller subscription check
   if (role === "seller") {

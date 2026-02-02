@@ -1,33 +1,37 @@
 import express from "express";
 import { protect } from "../middlewares/auth.js";
+import { checkSubscriptionExpiry } from "../utils/subscription.js";
 
 const authRouter = express.Router();
 
-// auth.js
+// GET CURRENT AUTH USER
 authRouter.get("/me", protect, async (req, res) => {
   try {
+    // ---------- SELLER ----------
     if (req.role === "seller" && req.user) {
-      console.log("req.user:", req.user);
-      console.log("req.user.subscription:", req.user.subscription);
+      let subscription = req.user.subscription || null;
 
-      // Convert subscription to plain object
-      const subscription = req.user.subscription
-        ? {
-            _id: req.user.subscription._id,
-            startDate: req.user.subscription.startDate,
-            endDate: req.user.subscription.endDate,
-            status: req.user.subscription.status,
-          }
-        : null;
+      // 🔑 Always check expiry on backend (server time)
+      if (subscription) {
+        subscription = await checkSubscriptionExpiry(subscription);
+      }
 
       return res.json({
         role: "seller",
         userId: req.user._id,
         isLoggedIn: true,
-        subscription,
+        subscription: subscription
+          ? {
+              _id: subscription._id,
+              startDate: subscription.startDate,
+              endDate: subscription.endDate,
+              status: subscription.status,
+            }
+          : null,
       });
     }
 
+    // ---------- ADMIN ----------
     if (req.role === "admin" && req.admin) {
       return res.json({
         role: "admin",
@@ -36,9 +40,10 @@ authRouter.get("/me", protect, async (req, res) => {
       });
     }
 
+    // ---------- FALLBACK ----------
     return res.status(401).json({ message: "Unauthorized" });
   } catch (err) {
-    console.error(err);
+    console.error("[/auth/me] Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

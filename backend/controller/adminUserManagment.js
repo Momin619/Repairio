@@ -43,8 +43,8 @@ export const createSubscription = async (req, res) => {
     }
 
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from start
-
+    const endDate = new Date(startDate); // 30 days from start
+    endDate.setDate(startDate.getDate() + 30);
     const subscription = await Subscription.create({
       user: user._id,
       startDate,
@@ -78,15 +78,17 @@ export const updateSubscription = async (req, res) => {
     const now = new Date();
     const subscription = await Subscription.findById(user.subscription);
 
-    // Update startDate if subscription expired
-    subscription.startDate =
-      subscription.endDate > now ? subscription.startDate : now;
-
-    // Extend endDate by 30 days
-    subscription.endDate = new Date(
-      (subscription.endDate > now ? subscription.endDate : now).getTime() +
-        30 * 24 * 60 * 60 * 1000,
-    );
+    // If subscription expired, reset startDate to now
+    if (subscription.endDate < now) {
+      subscription.startDate = now;
+      subscription.endDate = new Date(now); // copy now
+      subscription.endDate.setDate(now.getDate() + 30); // add 30 days
+    } else {
+      // If subscription is active, extend endDate by 30 days
+      const newEndDate = new Date(subscription.endDate);
+      newEndDate.setDate(subscription.endDate.getDate() + 30);
+      subscription.endDate = newEndDate;
+    }
 
     subscription.status = "active";
     await subscription.save();
@@ -98,46 +100,3 @@ export const updateSubscription = async (req, res) => {
 };
 
 // Middleware to check if a user has an active subscription
-export const checkSubscription = async (req, res, next) => {
-  try {
-    const user = req.user; // Comes from protect middleware
-    console.log("checkSubscription called for user:", user._id);
-    console.log("User subscription ID:", user.subscription);
-
-    if (!user.subscription) {
-      return res.status(403).json({
-        message: "No active subscription. Please contact admin.",
-      });
-    }
-
-    const subscription = await Subscription.findById(user.subscription);
-    console.log("Fetched subscription:", subscription);
-
-    if (!subscription) {
-      return res.status(403).json({
-        message: "Subscription not found",
-      });
-    }
-
-    const now = new Date();
-    console.log("Subscription endDate:", subscription.endDate);
-
-    // Check if subscription expired
-    if (subscription.endDate < now) {
-      subscription.status = "expired";
-      await subscription.save();
-
-      return res.status(403).json({
-        message: "Subscription has expired",
-      });
-    }
-
-    // ✅ Subscription valid, attach to request
-    req.subscription = subscription;
-
-    // Optional: send response confirming subscription is valid
-    res.status(200).json({ message: "Dashboard ok logging from backend" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};

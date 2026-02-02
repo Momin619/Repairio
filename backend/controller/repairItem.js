@@ -1,7 +1,9 @@
 import RepairItem from "../model/repairItem.js";
 import User from "../model/user.js";
 import { toWhatsAppNumber } from "../utils/phoneNumber.js";
-
+import mongoose from "mongoose";
+import { checkSubscriptionExpiry } from "../utils/subscription.js";
+import Subscription from "../model/subscription.js";
 // Create a new repair item
 
 export const trackRepairItem = async (req, res) => {
@@ -299,38 +301,48 @@ export const repairItemHistory = async (req, res) => {
 // Middleware: Check seller subscription active
 
 export const sellerSubscriptionActive = async (req, res, next) => {
-  // Admin bypass
+  try {
+    // Only sellers need subscription check
+    if (req.user?.role !== "seller") return next();
 
-  if (req.user?.role === "seller") {
-    const subscription = req.user.subscription;
-
-    if (!subscription) {
-      return res.status(403).json({ message: "No subscription" });
-    }
-
-    const now = new Date();
-    const endDate = new Date(subscription.endDate);
-
-    // ⏰ runtime expiry check
-    if (now >= endDate || subscription.status !== "active") {
-      // safety sync (in case login was not hit)
-      if (subscription.status !== "expired") {
-        subscription.status = "expired";
-        await subscription.save();
-      }
-
+    if (!req.user.subscription) {
       return res.status(403).json({
-        message: "Your subscription has expired",
-        code: "SUBSCRIPTION_EXPIRED",
+        code: "NO_SUBSCRIPTION",
+        message: "No subscription found",
       });
     }
-  }
 
-  next();
+    // Fetch fresh subscription from DB
+    const subscription = await Subscription.findById(req.user.subscription._id);
+    if (!subscription) {
+      return res.status(403).json({
+        code: "NO_SUBSCRIPTION",
+        message: "Subscription not found",
+      });
+    }
+
+    // 🔑 Single source of truth
+    const updatedSubscription = await checkSubscriptionExpiry(subscription);
+
+    // Attach updated subscription to req.user
+    req.user.subscription = updatedSubscription;
+
+    // Block request if expired
+    if (updatedSubscription.status === "expired") {
+      return res.status(403).json({
+        code: "SUBSCRIPTION_EXPIRED",
+        message: "Your subscription has expired",
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error("[sellerSubscriptionActive]", err);
+    res.status(500).json({ message: "Subscription check failed" });
+  }
 };
 
 //
-import mongoose from "mongoose";
 
 export const getRevenue = async (req, res) => {
   try {
