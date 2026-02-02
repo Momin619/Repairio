@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ---- LOGIN ----
   const login = (data) => {
     setAuth({
       isLoggedIn: true,
@@ -31,7 +30,6 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  // ---- LOGOUT ----
   const logout = async () => {
     const role = auth.role;
     try {
@@ -49,50 +47,37 @@ export const AuthProvider = ({ children }) => {
       navigate(role === "admin" ? "/admin/login" : "/login", { replace: true });
     }
   };
-  useEffect(() => {
-    if (!auth.subscription || auth.subscription.status === "expired") return;
 
-    const now = new Date();
-    const endDate = new Date(auth.subscription.endDate);
-    const timeLeft = endDate - now;
+  // ------------------------------
+  // FRONTEND AUTO REDIRECT LOGIC
+  // ------------------------------
+  const checkSubscription = async () => {
+    if (!auth.isLoggedIn || auth.role !== "seller") return;
 
-    // Capture the subscription object
-    const subscription = auth.subscription;
-
-    const handleExpiry = async (sub) => {
-      try {
-        if (!sub) return;
-        // Call backend to mark subscription as expired
-        await API.patch(`/user/subscription/expire/${sub._id}`);
-        console.log("[AuthContext] Subscription marked expired in DB");
-
-        // Update frontend state
+    try {
+      // Always fetch latest auth + subscription from backend
+      const res = await API.get("/auth/me");
+      if (res.data.subscription) {
         setAuth((prev) => ({
           ...prev,
-          subscription: prev.subscription
-            ? { ...prev.subscription, status: "expired" }
-            : null,
+          subscription: {
+            ...res.data.subscription,
+            startDate: new Date(res.data.subscription.startDate),
+            endDate: new Date(res.data.subscription.endDate),
+            status: res.data.subscription.status,
+          },
         }));
 
-        // Redirect to subscription expired page
-        navigate("/subscription-expired", { replace: true });
-      } catch (err) {
-        console.error("[AuthContext] Failed to expire subscription:", err);
+        if (res.data.subscription.status === "expired") {
+          navigate("/subscription-expired", { replace: true });
+        }
       }
-    };
-
-    if (timeLeft <= 0) {
-      // Already expired
-      handleExpiry(subscription);
-      return;
+    } catch (err) {
+      console.error("[AuthContext] Failed to fetch subscription:", err);
     }
+  };
 
-    const timer = setTimeout(() => handleExpiry(subscription), timeLeft);
-
-    return () => clearTimeout(timer);
-  }, [auth.subscription, navigate]);
-
-  // ---- FETCH CURRENT AUTH ----
+  // Check subscription **on mount** and **every 30 seconds**
   useEffect(() => {
     const fetchAuth = async () => {
       try {
@@ -106,7 +91,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     fetchAuth();
-  }, []);
+
+    // Poll subscription every 30 seconds
+    const interval = setInterval(checkSubscription, 30000);
+    return () => clearInterval(interval);
+  }, [auth.isLoggedIn]); // only start polling if logged in
 
   return (
     <AuthContext.Provider value={{ auth, login, logout, loading }}>
