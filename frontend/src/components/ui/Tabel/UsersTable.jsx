@@ -16,6 +16,7 @@ const columns = [
   { label: "Email", dataKey: "email", minWidth: 320 },
   { label: "Role", dataKey: "role", minWidth: 140 },
   { label: "Status", dataKey: "isActive", minWidth: 140 },
+  { label: "Subscription", dataKey: "subscriptionStatus", minWidth: 160 },
 ];
 
 const VirtuosoTableComponents = {
@@ -54,24 +55,36 @@ export default function UsersTable({ users }) {
   const navigate = useNavigate();
 
   function rowContent(index, row) {
-    return columns.map((column) => (
-      <TableCell
-        key={column.dataKey}
-        onClick={() => navigate(`/user/${row._id}`)}
-        sx={{
-          padding: "20px",
-          fontSize: "0.95rem",
-          cursor: "pointer",
-          minWidth: column.minWidth,
-        }}
-      >
-        {column.dataKey === "isActive"
-          ? row.isActive
-            ? "Active"
-            : "Pending"
-          : row[column.dataKey]}
-      </TableCell>
-    ));
+    return columns.map((column) => {
+      let value = row[column.dataKey];
+
+      if (column.dataKey === "isActive") {
+        value = row.isActive ? "Active" : "Pending";
+      }
+
+      if (column.dataKey === "subscriptionStatus") {
+        value = row.subscription
+          ? row.subscription.status === "expired"
+            ? "Expired"
+            : "Active"
+          : "No Subscription";
+      }
+
+      return (
+        <TableCell
+          key={column.dataKey}
+          onClick={() => navigate(`/user/${row._id}`)}
+          sx={{
+            padding: "20px",
+            fontSize: "0.95rem",
+            cursor: "pointer",
+            minWidth: column.minWidth,
+          }}
+        >
+          {value}
+        </TableCell>
+      );
+    });
   }
 
   return (

@@ -314,6 +314,8 @@ export const sellerSubscriptionActive = async (req, res, next) => {
 
     // Fetch fresh subscription from DB
     const subscription = await Subscription.findById(req.user.subscription._id);
+    console.log("subscription from db", subscription);
+
     if (!subscription) {
       return res.status(403).json({
         code: "NO_SUBSCRIPTION",
@@ -323,6 +325,7 @@ export const sellerSubscriptionActive = async (req, res, next) => {
 
     // 🔑 Single source of truth
     const updatedSubscription = await checkSubscriptionExpiry(subscription);
+    console.log("updatedSubscription", updatedSubscription);
 
     // Attach updated subscription to req.user
     req.user.subscription = updatedSubscription;
@@ -341,8 +344,6 @@ export const sellerSubscriptionActive = async (req, res, next) => {
     res.status(500).json({ message: "Subscription check failed" });
   }
 };
-
-//
 
 export const getRevenue = async (req, res) => {
   try {

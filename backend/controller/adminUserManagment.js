@@ -41,10 +41,12 @@ export const createSubscription = async (req, res) => {
     if (user.subscription) {
       return res.status(400).json({ message: "Subscription already exists" });
     }
-
     const startDate = new Date();
-    const endDate = new Date(startDate); // 30 days from start
-    endDate.setDate(startDate.getDate() + 30);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 30); // 30 days from start
+
+    console.log("Start Date:", startDate.toISOString());
+    console.log("End Date:", endDate.toISOString());
     const subscription = await Subscription.create({
       user: user._id,
       startDate,

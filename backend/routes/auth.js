@@ -10,6 +10,7 @@ authRouter.get("/me", protect, async (req, res) => {
     // ---------- SELLER ----------
     if (req.role === "seller" && req.user) {
       let subscription = req.user.subscription || null;
+      console.log("subscription from auth route from memeory", subscription);
 
       // 🔑 Always check expiry on backend (server time)
       if (subscription) {

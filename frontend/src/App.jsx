@@ -22,7 +22,7 @@ import { useAuth } from "./context/AuthContext";
 import SettingPage from "./pages/Setting/SettingPage";
 import RevenuePage from "./pages/Dashboard/User/RevenuePage";
 import TrackRepairItemPage from "./pages/Dashboard/User/TrackRepairItemPage";
-
+import ContactUsPage from "./pages/ContactUs/ContactUsPage";
 export default function App() {
   const {
     auth: { role, isLoggedIn },
@@ -53,7 +53,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/" element={<HomePage />} />
-
+        <Route path="/contact-us" element={<ContactUsPage />} />
         {/* Protected routes for seller */}
         <Route
           path="/dashboard"

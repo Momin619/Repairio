@@ -1,14 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Paper,
-  Typography,
-  Chip,
-  Button,
-  Divider,
-  Stack,
-  Box,
-} from "@mui/material";
+import { Paper, Typography, Button, Divider, Stack, Box } from "@mui/material";
 import {
   FaUser,
   FaStore,
@@ -32,36 +24,61 @@ export default function AdminUserDetails() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const controllerRef = useRef(null); // track current request
+
   const fetchUser = async () => {
+    // abort previous request if any
+    if (controllerRef.current) controllerRef.current.abort();
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     try {
-      const res = await API.get(`/admin/user/${userId}`);
-      setUser(res.data);
+      const res = await API.get(`/admin/user/${userId}`, {
+        signal: controller.signal,
+      });
+      if (!controller.signal.aborted) setUser(res.data);
     } catch (err) {
-      toast.error("Failed to load user");
-      navigate("/admin");
+      if (err.name === "CanceledError") {
+        console.log("Request canceled");
+      } else {
+        toast.error("Failed to load user");
+        navigate("/admin");
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   };
 
   const handleBtn = async () => {
+    // abort previous request if any
+    if (controllerRef.current) controllerRef.current.abort();
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     try {
       setLoading(true);
       const url = user.subscription
         ? `/admin/update-subscription/${userId}`
         : `/admin/create-subscription/${userId}`;
-      const res = await API.post(url, {});
-      toast.success(res.data.message);
+      const res = await API.post(url, {}, { signal: controller.signal });
+      if (!controller.signal.aborted) toast.success(res.data.message);
       fetchUser(); // refresh user data
     } catch (err) {
-      toast.error(err.response?.data?.message || "Subscription error");
+      if (err.name !== "CanceledError")
+        toast.error(err.response?.data?.message || "Subscription error");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUser();
+
+    return () => {
+      if (controllerRef.current) controllerRef.current.abort(); // cancel on unmount
+    };
   }, [userId]);
 
   if (loading) return <Loader />;
@@ -152,7 +169,6 @@ export default function AdminUserDetails() {
                 Subscription Details
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                {/* Start Date & Time */}
                 <Box className="flex items-center gap-2">
                   <FaCalendarAlt className="text-gray-500 dark:text-gray-300" />
                   <Typography variant="body2">
@@ -160,16 +176,12 @@ export default function AdminUserDetails() {
                     {user.subscription?.startDate
                       ? new Date(user.subscription.startDate).toLocaleString(
                           "en-US",
-                          {
-                            dateStyle: "medium",
-                            timeStyle: "short", // shows time like 4:30 PM
-                          },
+                          { dateStyle: "medium", timeStyle: "short" },
                         )
                       : "N/A"}
                   </Typography>
                 </Box>
 
-                {/* End Date & Time */}
                 <Box className="flex items-center gap-2">
                   <FaClock className="text-gray-500 dark:text-gray-300" />
                   <Typography variant="body2">
@@ -177,10 +189,7 @@ export default function AdminUserDetails() {
                     {user.subscription?.endDate
                       ? new Date(user.subscription.endDate).toLocaleString(
                           "en-US",
-                          {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          },
+                          { dateStyle: "medium", timeStyle: "short" },
                         )
                       : "N/A"}
                   </Typography>
@@ -189,7 +198,6 @@ export default function AdminUserDetails() {
             </Box>
           )}
 
-          {/* Subscription Button */}
           <Box className="flex flex-col mt-3">
             <Button
               variant="contained"
@@ -210,7 +218,6 @@ export default function AdminUserDetails() {
             </Button>
           </Box>
 
-          {/* Account Created At */}
           <Box className="flex flex-col gap-1">
             <Typography variant="subtitle2" color="text.secondary">
               Account Created

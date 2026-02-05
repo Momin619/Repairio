@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
 import repairItemRouter from "./routes/repairItem.js";
+import subscriptionRouter from "./routes/subscription.js";
+import authRouter from "./routes/auth.js";
 import connectDB from "./utils/connectMongodb.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import authRouter from "./routes/auth.js";
 import path from "path";
-
 dotenv.config();
 
 connectDB();
@@ -34,7 +34,7 @@ app.use("/api/user", userRouter);
 
 app.use("/api/admin", adminRouter);
 app.use("/api", repairItemRouter);
-
+app.use("/api", subscriptionRouter);
 const PORT = process.env.PORT;
 
 app.listen(PORT, "0.0.0.0", () =>

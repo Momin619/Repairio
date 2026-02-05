@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
 import UsersTable from "@/components/ui/Tabel/UsersTable";
@@ -11,29 +11,61 @@ export default function AdminDashboard() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  const controllerRef = useRef(null); // store the current controller
+
   const fetchUsers = useCallback(async (pageNum = 1) => {
+    // abort previous request if any
+    if (controllerRef.current) {
+      console.log(`fetchUsers: aborting previous request for page ${pageNum}`);
+      controllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    console.log(`fetchUsers: starting request for page ${pageNum}`);
+
     try {
       if (pageNum === 1) setLoading(true);
       else setLoadingMore(true);
 
-      const res = await API.get(`/admin/users?page=${pageNum}&limit=12`);
+      const res = await API.get(`/admin/users?page=${pageNum}&limit=12`, {
+        signal: controller.signal,
+      });
 
-      const fetchedUsers = res.data.users || [];
+      if (!controller.signal.aborted) {
+        const fetchedUsers = res.data.users || [];
+        if (pageNum === 1) setUsers(fetchedUsers);
+        else setUsers((prev) => [...prev, ...fetchedUsers]);
 
-      if (pageNum === 1) setUsers(fetchedUsers);
-      else setUsers((prev) => [...prev, ...fetchedUsers]);
-
-      setTotalPages(res.data.totalPages);
-    } catch {
-      toast.error("Failed to fetch users");
+        setTotalPages(res.data.totalPages);
+        console.log(`fetchUsers: completed request for page ${pageNum}`);
+      }
+    } catch (err) {
+      if (controller.signal.aborted) {
+        console.log(`fetchUsers: request canceled for page ${pageNum}`);
+      } else {
+        console.log(`fetchUsers: error fetching page ${pageNum}`, err);
+        toast.error("Failed to fetch users");
+      }
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    console.log("AdminDashboard: useEffect mounted, fetching page 1");
+    fetchUsers(1);
+
+    return () => {
+      console.log(
+        "AdminDashboard: component unmount, aborting any ongoing request",
+      );
+      if (controllerRef.current) controllerRef.current.abort(); // cancel on unmount
+    };
   }, [fetchUsers]);
 
   const loadMore = () => {

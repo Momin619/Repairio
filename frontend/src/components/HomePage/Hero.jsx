@@ -38,19 +38,6 @@ export default function Hero() {
         </motion.p>
 
         {/* Buttons */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex flex-wrap justify-center gap-4 mt-8 sm:mt-10 sm:gap-6"
-        >
-          <a className="px-5 py-3 text-sm font-semibold text-white transition-all duration-300 transform rounded-lg shadow-lg sm:px-6 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-xl hover:-translate-y-1 hover:scale-105 sm:text-base">
-            Get Started
-          </a>
-          <a className="px-5 py-3 text-sm font-semibold text-blue-500 transition-all duration-300 transform border border-blue-600 rounded-lg shadow-md sm:px-6 sm:py-4 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:-translate-y-1 hover:scale-105 sm:text-base">
-            Learn More
-          </a>
-        </motion.div>
       </div>
     </section>
   );

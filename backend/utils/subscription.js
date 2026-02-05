@@ -1,10 +1,12 @@
 export const checkSubscriptionExpiry = async (subscription) => {
-  if (!subscription) return null;
-
-  const now = new Date(); // SERVER TIME
+  const now = new Date();
   const endDate = new Date(subscription.endDate);
 
+  console.log("SERVER NOW:", now);
+  console.log("END DATE:", endDate);
+
   if (now >= endDate && subscription.status !== "expired") {
+    console.log("MARKING EXPIRED");
     subscription.status = "expired";
     await subscription.save();
   }

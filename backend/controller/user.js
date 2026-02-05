@@ -63,6 +63,7 @@ export const login = async (req, res) => {
 
       // 🔑 SINGLE expiry check (server time)
       const subscription = await checkSubscriptionExpiry(user.subscription);
+      console.log("subscription from login function", subscription);
 
       if (subscription.status === "expired") {
         return res

@@ -24,6 +24,9 @@ export default function ResponsiveAppBar() {
   const openMenu = (e) => setAnchorEl(e.currentTarget);
   const closeMenu = () => setAnchorEl(null);
 
+  // 🌍 Public links (visible to everyone)
+  const publicLinks = [{ name: "Contact Us", to: "/contact-us" }];
+
   // Auth links
   const authLinks = isLoggedIn
     ? [
@@ -46,13 +49,12 @@ export default function ResponsiveAppBar() {
         ]
       : [];
 
-  // Helper to get active link styles
   const getLinkStyles = (linkTo) => ({
     backgroundColor:
       location.pathname === linkTo
         ? theme === "dark"
-          ? "#444" // dark theme active background
-          : "#e0e0e0" // light theme active background
+          ? "#444"
+          : "#e0e0e0"
         : "transparent",
     color: theme === "dark" ? "#fff" : "#111",
     textTransform: "none",
@@ -82,7 +84,21 @@ export default function ResponsiveAppBar() {
             </Typography>
           </Box>
 
-          {/* Seller links (desktop only) */}
+          {/* Public links (desktop) */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
+            {publicLinks.map((link) => (
+              <Button
+                key={link.name}
+                component={Link}
+                to={link.to}
+                sx={getLinkStyles(link.to)}
+              >
+                {link.name}
+              </Button>
+            ))}
+          </Box>
+
+          {/* Seller links (desktop) */}
           {sellerLinks.length > 0 && (
             <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
               {sellerLinks.map((link) => (
@@ -100,7 +116,7 @@ export default function ResponsiveAppBar() {
 
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* Auth links (desktop only) */}
+          {/* Auth links (desktop) */}
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
             {authLinks.map((link) =>
               link.action ? (
@@ -124,8 +140,7 @@ export default function ResponsiveAppBar() {
             )}
           </Box>
 
-          {/* Mobile menu (ALL users) */}
-          {/* Mobile menu (ALL users) */}
+          {/* Mobile menu */}
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
             <IconButton
               onClick={openMenu}
@@ -139,7 +154,20 @@ export default function ResponsiveAppBar() {
               open={Boolean(anchorEl)}
               onClose={closeMenu}
             >
-              {/* ⚡ Only auth links for mobile */}
+              {/* Public links (mobile) */}
+              {publicLinks.map((link) => (
+                <MenuItem
+                  key={link.name}
+                  component={Link}
+                  to={link.to}
+                  onClick={closeMenu}
+                  sx={{ color: theme === "dark" ? "#fff" : "#111" }}
+                >
+                  {link.name}
+                </MenuItem>
+              ))}
+
+              {/* Auth links (mobile) */}
               {authLinks.map((link) =>
                 link.action ? (
                   <MenuItem

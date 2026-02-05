@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import RepairItemCard from "./RepairItemCard";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
+
 export default function RepairItemList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,37 +16,50 @@ export default function RepairItemList() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Fetch items with search and pagination
-  const fetchItems = useCallback(async (searchTerm = "", pageNum = 1) => {
-    try {
-      if (pageNum === 1) setLoading(true);
-      else setLoadingMore(true);
+  const controllerRef = useRef(null); // track current request
 
-      const res = await API.get(
-        `/repair-items?search=${searchTerm}&page=${pageNum}&limit=12`,
-      );
+  // ---------------- FETCH ITEMS ----------------
+  const fetchItems = useCallback(
+    async (searchTerm = "", pageNum = 1, controller) => {
+      try {
+        if (pageNum === 1) setLoading(true);
+        else setLoadingMore(true);
 
-      const fetchedItems = res.data.items || [];
+        const res = await API.get(
+          `/repair-items?search=${searchTerm}&page=${pageNum}&limit=12`,
+          { signal: controller.signal },
+        );
 
-      if (pageNum === 1) setItems(fetchedItems);
-      else setItems((prev) => [...prev, ...fetchedItems]);
+        if (controller.signal.aborted) return; // stop if aborted
 
-      setTotalPages(res.data.totalPages);
-      setHasMore(pageNum < res.data.totalPages);
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to fetch items");
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+        const fetchedItems = res.data.items || [];
+        if (pageNum === 1) setItems(fetchedItems);
+        else setItems((prev) => [...prev, ...fetchedItems]);
 
-  // Debounced search
+        setTotalPages(res.data.totalPages);
+        setHasMore(pageNum < res.data.totalPages);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          toast.error(err?.response?.data?.message || "Failed to fetch items");
+          console.error("Fetch error:", err);
+        } else {
+          console.log("fetchItems canceled", { pageNum });
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    [],
+  );
+
+  // ---------------- DEBOUNCED SEARCH ----------------
   const debouncedSearch = useCallback(
-    debounce((value) => {
+    debounce((value, controller) => {
       setPage(1);
-      fetchItems(value, 1);
+      fetchItems(value, 1, controller);
     }, 800),
     [fetchItems],
   );
@@ -53,23 +67,41 @@ export default function RepairItemList() {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearch(value);
-    debouncedSearch(value);
+
+    // cancel previous request
+    if (controllerRef.current) controllerRef.current.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    debouncedSearch(value, controller);
   };
 
+  // ---------------- LOAD MORE ----------------
   const loadMore = () => {
     if (page >= totalPages) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchItems(search, nextPage);
+
+    // cancel previous request
+    if (controllerRef.current) controllerRef.current.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    fetchItems(search, nextPage, controller);
   };
 
-  const handleItemCompleted = (completedItemId) => {
-    setItems((prev) => prev.filter((item) => item._id !== completedItemId));
-  };
-
+  // ---------------- INITIAL FETCH ----------------
   useEffect(() => {
-    fetchItems();
-    return () => debouncedSearch.cancel(); // cancel debounce on unmount
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    fetchItems("", 1, controller);
+
+    return () => {
+      controller.abort(); // cancel ongoing request on unmount
+      debouncedSearch.cancel(); // cancel debounced search
+      console.log("RepairItemList: cleanup, canceled requests");
+    };
   }, [fetchItems, debouncedSearch]);
 
   if (loading && page === 1) return <Loader />;
@@ -101,7 +133,9 @@ export default function RepairItemList() {
               <RepairItemCard
                 key={item._id}
                 itemData={item}
-                onCompleted={handleItemCompleted}
+                onCompleted={(id) =>
+                  setItems((prev) => prev.filter((itm) => itm._id !== id))
+                }
               />
             ))}
           </div>
