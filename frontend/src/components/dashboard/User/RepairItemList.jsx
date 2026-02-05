@@ -32,7 +32,9 @@ export default function RepairItemList() {
 
         if (controller.signal.aborted) return; // stop if aborted
 
-        const fetchedItems = res.data.items || [];
+        const fetchedItems = res.data.items.filter(
+          (item) => item.status === "pending" || item.status === "in-repair",
+        );
         if (pageNum === 1) setItems(fetchedItems);
         else setItems((prev) => [...prev, ...fetchedItems]);
 
@@ -42,8 +44,6 @@ export default function RepairItemList() {
         if (!controller.signal.aborted) {
           toast.error(err?.response?.data?.message || "Failed to fetch items");
           console.error("Fetch error:", err);
-        } else {
-          console.log("fetchItems canceled", { pageNum });
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -56,25 +56,40 @@ export default function RepairItemList() {
   );
 
   // ---------------- DEBOUNCED SEARCH ----------------
-  const debouncedSearch = useCallback(
+  const debouncedSearchRef = useRef(
     debounce((value, controller) => {
       setPage(1);
       fetchItems(value, 1, controller);
     }, 800),
-    [fetchItems],
   );
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearch(value);
 
-    // cancel previous request
+    // Cancel previous request
     if (controllerRef.current) controllerRef.current.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    debouncedSearch(value, controller);
+    debouncedSearchRef.current(value, controller);
   };
+
+  // ---------------- INITIAL FETCH ----------------
+  useEffect(() => {
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    fetchItems("", 1, controller);
+
+    // Capture debouncedSearchRef.current for cleanup
+    const currentDebounced = debouncedSearchRef.current;
+
+    return () => {
+      controller.abort(); // cancel ongoing request on unmount
+      currentDebounced.cancel(); // cancel pending debounced calls
+    };
+  }, [fetchItems]);
 
   // ---------------- LOAD MORE ----------------
   const loadMore = () => {
@@ -91,18 +106,6 @@ export default function RepairItemList() {
   };
 
   // ---------------- INITIAL FETCH ----------------
-  useEffect(() => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-
-    fetchItems("", 1, controller);
-
-    return () => {
-      controller.abort(); // cancel ongoing request on unmount
-      debouncedSearch.cancel(); // cancel debounced search
-      console.log("RepairItemList: cleanup, canceled requests");
-    };
-  }, [fetchItems, debouncedSearch]);
 
   if (loading && page === 1) return <Loader />;
 
@@ -128,17 +131,31 @@ export default function RepairItemList() {
       ) : (
         <>
           {/* Stacked Full-Width Cards */}
-          <div className="flex flex-col gap-6">
-            {items.map((item) => (
-              <RepairItemCard
-                key={item._id}
-                itemData={item}
-                onCompleted={(id) =>
-                  setItems((prev) => prev.filter((itm) => itm._id !== id))
+          {items.map((item) => (
+            <RepairItemCard
+              key={item._id}
+              itemData={item}
+              onStatusChange={(updatedItem) => {
+                // 🔥 REMOVE if completed or deleted
+                if (
+                  updatedItem?.status === "completed" ||
+                  updatedItem?.removed
+                ) {
+                  setItems((prev) =>
+                    prev.filter((i) => i._id !== updatedItem._id),
+                  );
+                  return;
                 }
-              />
-            ))}
-          </div>
+
+                // 🔄 UPDATE if pending → in-repair
+                setItems((prev) =>
+                  prev.map((i) =>
+                    i._id === updatedItem._id ? updatedItem : i,
+                  ),
+                );
+              }}
+            />
+          ))}
 
           {hasMore && (
             <div className="flex justify-center mt-8">

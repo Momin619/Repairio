@@ -1,4 +1,5 @@
 import Subscription from "../model/subscription.js";
+
 export const expireSubscription = async (req, res) => {
   const { subscriptionId } = req.body;
   const subscription = await Subscription.findById(subscriptionId);

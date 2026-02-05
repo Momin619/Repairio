@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Paper, Typography, Button, Divider, Stack, Box } from "@mui/material";
 import {
@@ -12,48 +12,53 @@ import {
   FaClock,
 } from "react-icons/fa";
 import API from "../../../api/api";
-import { useAuth } from "../../../context/AuthContext";
 import Loader from "@/components/ui/Loader";
 import toast from "react-hot-toast";
 
 export default function AdminUserDetails() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { auth } = useAuth();
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const controllerRef = useRef(null); // track current request
+  const controllerRef = useRef(null);
 
-  const fetchUser = async () => {
-    // abort previous request if any
+  const fetchUser = useCallback(async () => {
     if (controllerRef.current) controllerRef.current.abort();
-
     const controller = new AbortController();
     controllerRef.current = controller;
 
     try {
+      setLoading(true);
       const res = await API.get(`/admin/user/${userId}`, {
         signal: controller.signal,
       });
       if (!controller.signal.aborted) setUser(res.data);
     } catch (err) {
-      if (err.name === "CanceledError") {
-        console.log("Request canceled");
-      } else {
+      if (err.name !== "CanceledError") {
         toast.error("Failed to load user");
         navigate("/admin");
       }
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  };
+  }, [userId, navigate]); // stable identity, includes deps
 
+  // ---------------- EFFECT ----------------
+  useEffect(() => {
+    fetchUser(); // now safe to call
+
+    return () => {
+      if (controllerRef.current) controllerRef.current.abort();
+    };
+  }, [fetchUser]); // include fetchUser
+
+  // ---------------- HANDLER ----------------
   const handleBtn = async () => {
-    // abort previous request if any
-    if (controllerRef.current) controllerRef.current.abort();
+    if (!user) return;
 
+    if (controllerRef.current) controllerRef.current.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
 
@@ -64,7 +69,7 @@ export default function AdminUserDetails() {
         : `/admin/create-subscription/${userId}`;
       const res = await API.post(url, {}, { signal: controller.signal });
       if (!controller.signal.aborted) toast.success(res.data.message);
-      fetchUser(); // refresh user data
+      fetchUser(); // refresh
     } catch (err) {
       if (err.name !== "CanceledError")
         toast.error(err.response?.data?.message || "Subscription error");
@@ -73,15 +78,9 @@ export default function AdminUserDetails() {
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-
-    return () => {
-      if (controllerRef.current) controllerRef.current.abort(); // cancel on unmount
-    };
-  }, [userId]);
-
   if (loading) return <Loader />;
+
+  if (!user) return null;
 
   return (
     <Box className="min-h-screen p-4 bg-gray-100 dark:bg-gray-900">
@@ -173,7 +172,7 @@ export default function AdminUserDetails() {
                   <FaCalendarAlt className="text-gray-500 dark:text-gray-300" />
                   <Typography variant="body2">
                     Start:{" "}
-                    {user.subscription?.startDate
+                    {user.subscription.startDate
                       ? new Date(user.subscription.startDate).toLocaleString(
                           "en-US",
                           { dateStyle: "medium", timeStyle: "short" },
@@ -186,7 +185,7 @@ export default function AdminUserDetails() {
                   <FaClock className="text-gray-500 dark:text-gray-300" />
                   <Typography variant="body2">
                     End:{" "}
-                    {user.subscription?.endDate
+                    {user.subscription.endDate
                       ? new Date(user.subscription.endDate).toLocaleString(
                           "en-US",
                           { dateStyle: "medium", timeStyle: "short" },

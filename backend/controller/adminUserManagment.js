@@ -45,8 +45,6 @@ export const createSubscription = async (req, res) => {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 30); // 30 days from start
 
-    console.log("Start Date:", startDate.toISOString());
-    console.log("End Date:", endDate.toISOString());
     const subscription = await Subscription.create({
       user: user._id,
       startDate,

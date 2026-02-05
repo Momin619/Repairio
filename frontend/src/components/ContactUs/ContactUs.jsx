@@ -16,12 +16,12 @@ export default function ContactUs() {
           <div className="flex items-center justify-center gap-3">
             <FiPhone className="text-2xl text-blue-600 dark:text-blue-400" />
             <a
-              href="https://wa.me/923001234567"
+              href="https://wa.me/923305834360"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-gray-800 transition dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
             >
-              +92 300 1234567
+              +92 330 5834360
             </a>
           </div>
 

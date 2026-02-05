@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { FaTools, FaImage } from "react-icons/fa";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
-
+import { useNavigate } from "react-router-dom";
 export default function RepairItemForm() {
   const {
     register,
@@ -12,6 +12,8 @@ export default function RepairItemForm() {
     reset,
     formState: { errors },
   } = useForm({ mode: "onChange" });
+
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
@@ -37,11 +39,17 @@ export default function RepairItemForm() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      // ✅ Show toast
       toast.success(res.data.message);
 
-      // ✅ OPEN WHATSAPP WITH MESSAGE + TRACKING LINK
+      // ✅ Redirect to dashboard
+      navigate("/dashboard");
+
+      // ✅ After redirect, open WhatsApp (small delay ensures navigation completes)
       if (res.data.whatsappLink) {
-        window.open(res.data.whatsappLink, "_blank");
+        setTimeout(() => {
+          window.open(res.data.whatsappLink, "_blank");
+        }, 1600); // 300ms delay is usually enough
       }
 
       reset();
@@ -51,7 +59,9 @@ export default function RepairItemForm() {
   };
 
   return (
-    <div className="w-full px-4 pt-16 sm:pt-12 md:pt-16">
+    <div className="w-full px-4 pt-16 pb-32 sm:pt-12 md:pt-16">
+      {" "}
+      {/* <-- add pb-32 */}
       <div className="max-w-2xl p-5 mx-auto bg-white border shadow-sm sm:p-6 md:p-6 rounded-xl dark:bg-gray-900 dark:border-gray-700">
         {/* Heading */}
         <h2 className="flex items-center gap-2 mb-5 overflow-hidden text-xl font-bold text-gray-800 sm:text-2xl md:text-2xl dark:text-white whitespace-nowrap text-ellipsis">
@@ -130,6 +140,7 @@ export default function RepairItemForm() {
           {/* Phone */}
           <div>
             <input
+              type="number"
               {...register("customerPhone", {
                 required: "Phone number is required",
                 pattern: {

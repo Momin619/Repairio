@@ -14,16 +14,13 @@ export default function AdminDashboard() {
   const controllerRef = useRef(null); // store the current controller
 
   const fetchUsers = useCallback(async (pageNum = 1) => {
-    // abort previous request if any
+    // Abort previous request if any
     if (controllerRef.current) {
-      console.log(`fetchUsers: aborting previous request for page ${pageNum}`);
       controllerRef.current.abort();
     }
 
     const controller = new AbortController();
     controllerRef.current = controller;
-
-    console.log(`fetchUsers: starting request for page ${pageNum}`);
 
     try {
       if (pageNum === 1) setLoading(true);
@@ -39,14 +36,10 @@ export default function AdminDashboard() {
         else setUsers((prev) => [...prev, ...fetchedUsers]);
 
         setTotalPages(res.data.totalPages);
-        console.log(`fetchUsers: completed request for page ${pageNum}`);
       }
     } catch (err) {
-      if (controller.signal.aborted) {
-        console.log(`fetchUsers: request canceled for page ${pageNum}`);
-      } else {
-        console.log(`fetchUsers: error fetching page ${pageNum}`, err);
-        toast.error("Failed to fetch users");
+      if (!controller.signal.aborted) {
+        toast.error(err);
       }
     } finally {
       if (!controller.signal.aborted) {
@@ -57,13 +50,9 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    console.log("AdminDashboard: useEffect mounted, fetching page 1");
     fetchUsers(1);
 
     return () => {
-      console.log(
-        "AdminDashboard: component unmount, aborting any ongoing request",
-      );
       if (controllerRef.current) controllerRef.current.abort(); // cancel on unmount
     };
   }, [fetchUsers]);

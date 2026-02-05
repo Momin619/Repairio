@@ -46,7 +46,7 @@ export const repairItemCreate = async (req, res) => {
       ? req.files.map((file) => `/uploads/repair-items/${file.filename}`)
       : [];
 
-    // Create repair item
+    // Create repair item with pending status
     const repairItem = await RepairItem.create({
       itemName,
       problem,
@@ -54,7 +54,11 @@ export const repairItemCreate = async (req, res) => {
       customer: parsedCustomer,
       images,
       sellerId: req.user._id, // seller is logged-in user
+      status: "pending",
+      startedAt: null, // explicitly null
+      completedAt: null, // explicitly null
     });
+
     const trackingLink = `${process.env.FRONTEND_URL}/track/${repairItem.trackingToken}`;
     const customerWhatsApp = toWhatsAppNumber(parsedCustomer.phone);
 
@@ -62,12 +66,14 @@ export const repairItemCreate = async (req, res) => {
 Your repair item has been registered.
 
 Item: ${itemName}
-Status: In Repair
+Status: Pending
 
 Track your repair here:
 ${trackingLink}`;
 
-    const whatsappLink = `https://wa.me/${customerWhatsApp}?text=${encodeURIComponent(message)}`;
+    const whatsappLink = `https://wa.me/${customerWhatsApp}?text=${encodeURIComponent(
+      message,
+    )}`;
 
     res.status(201).json({
       message: "Repair item created",
@@ -90,7 +96,7 @@ export const repairItemList = async (req, res) => {
     // Search filter
     const query = {
       sellerId: req.user._id,
-      status: "in-repair",
+      status: { $in: ["pending", "in-repair"] },
       $or: [
         { itemName: { $regex: search, $options: "i" } },
         { "customer.name": { $regex: search, $options: "i" } },
@@ -108,6 +114,36 @@ export const repairItemList = async (req, res) => {
       .limit(parseInt(limit));
 
     res.status(200).json({ items, totalPages });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /repair-item/:id/start-repair
+export const repairItemStartRepair = async (req, res) => {
+  try {
+    const item = await RepairItem.findById(req.params.id);
+    if (!item)
+      return res.status(404).json({ message: "Repair item not found" });
+
+    // Ownership check
+    if (item.sellerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You are not allowed to update this repair item",
+      });
+    }
+
+    if (item.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Only pending items can be moved to in-repair" });
+    }
+
+    item.status = "in-repair";
+    item.startedAt = new Date(); // track when repair started
+    await item.save();
+
+    res.status(200).json({ message: "Repair started", item });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -133,7 +169,7 @@ export const repairItemGetById = async (req, res) => {
 
 // Update repair item status
 
-export const repairItemUpdateStatus = async (req, res) => {
+export const repairItemCompleteRepair = async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -314,7 +350,6 @@ export const sellerSubscriptionActive = async (req, res, next) => {
 
     // Fetch fresh subscription from DB
     const subscription = await Subscription.findById(req.user.subscription._id);
-    console.log("subscription from db", subscription);
 
     if (!subscription) {
       return res.status(403).json({
@@ -325,7 +360,6 @@ export const sellerSubscriptionActive = async (req, res, next) => {
 
     // 🔑 Single source of truth
     const updatedSubscription = await checkSubscriptionExpiry(subscription);
-    console.log("updatedSubscription", updatedSubscription);
 
     // Attach updated subscription to req.user
     req.user.subscription = updatedSubscription;

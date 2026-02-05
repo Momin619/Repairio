@@ -21,8 +21,6 @@ export default function Revenue() {
       } catch (err) {
         if (!controller.signal.aborted) {
           toast.error(err.response?.data?.message || "Something went wrong");
-        } else {
-          console.log("Revenue fetch canceled");
         }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -33,7 +31,6 @@ export default function Revenue() {
 
     return () => {
       controller.abort();
-      console.log("Revenue: cleanup, canceled request");
     };
   }, []);
 

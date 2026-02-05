@@ -1,7 +1,6 @@
 import User from "../model/user.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken.js";
-import Subscription from "../model/subscription.js";
 import { checkSubscriptionExpiry } from "../utils/subscription.js";
 // User Signup
 
@@ -63,7 +62,6 @@ export const login = async (req, res) => {
 
       // 🔑 SINGLE expiry check (server time)
       const subscription = await checkSubscriptionExpiry(user.subscription);
-      console.log("subscription from login function", subscription);
 
       if (subscription.status === "expired") {
         return res
@@ -74,13 +72,13 @@ export const login = async (req, res) => {
 
     // Refresh populated data
     await user.populate("subscription");
-
+    const ONE_DAY = 24 * 60 * 60;
     const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production with HTTPS
+      secure: true, // true in production with HTTPS
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: ONE_DAY * 1000,
     });
 
     res.json({

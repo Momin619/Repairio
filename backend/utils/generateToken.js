@@ -1,6 +1,6 @@
 // utils/generateToken.js
 import jwt from "jsonwebtoken";
-
+const ONE_DAY = 24 * 60 * 60;
 export const generateToken = (user) => {
   let secret;
 
@@ -17,6 +17,6 @@ export const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role }, // payload
     secret, // role-specific secret
-    { expiresIn: "7d" }, // token expiry
+    { expiresIn: `${ONE_DAY}s` }, // token expiry
   );
 };

@@ -71,8 +71,6 @@ export const AuthProvider = ({ children }) => {
       const end = new Date(auth.subscription.endDate).getTime();
 
       if (now >= end) {
-        console.log("[SUBSCRIPTION EXPIRED] Redirecting user");
-
         // Update frontend state
         setAuth((prev) => ({
           ...prev,
@@ -84,9 +82,8 @@ export const AuthProvider = ({ children }) => {
           await API.post("/subscription/expire", {
             subscriptionId: auth.subscription._id,
           });
-          console.log("[BACKEND UPDATED] Subscription marked expired");
-        } catch (err) {
-          console.error("[BACKEND ERROR] Failed to update subscription", err);
+        } catch {
+          // silently fail in production
         }
 
         // Stop interval
@@ -104,7 +101,12 @@ export const AuthProvider = ({ children }) => {
     const interval = setInterval(checkExpiry, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [auth.subscription?.endDate, auth.subscription?.status]);
+  }, [
+    navigate,
+    auth.subscription?._id,
+    auth.subscription?.endDate,
+    auth.subscription?.status,
+  ]);
 
   // ---------------- AUTO EXPIRY REDIRECT ----------------
 

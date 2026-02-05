@@ -16,10 +16,10 @@ const repairItemSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["in-repair", "completed"],
-      default: "in-repair",
+      enum: ["pending", "in-repair", "completed"],
+      default: "pending",
     },
-
+    startedAt: { type: Date }, // <-- new field
     completedAt: { type: Date },
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,

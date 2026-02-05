@@ -6,10 +6,11 @@ import {
   repairItemGetById,
   repairItemHistory,
   repairItemList,
-  repairItemUpdateStatus,
+  repairItemCompleteRepair,
   sellerSubscriptionActive,
   getRevenue,
   trackRepairItem,
+  repairItemStartRepair,
 } from "../controller/repairItem.js";
 
 import { protect } from "../middlewares/auth.js";
@@ -52,10 +53,17 @@ repairItemRouter.get(
 ); // Single item
 
 repairItemRouter.patch(
-  "/repair-item/:id/update-status",
+  "/repair-item/:id/start-repair",
   protect,
   sellerSubscriptionActive,
-  repairItemUpdateStatus,
+  repairItemStartRepair,
+);
+
+repairItemRouter.patch(
+  "/repair-item/:id/complete-repair",
+  protect,
+  sellerSubscriptionActive,
+  repairItemCompleteRepair,
 ); // Update status
 
 repairItemRouter.delete(

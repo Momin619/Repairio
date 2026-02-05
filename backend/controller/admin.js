@@ -2,7 +2,7 @@ import Admin from "../model/admin.js"; // Admin model
 import bcrypt from "bcryptjs"; // For password hashing and verification
 import User from "../model/user.js"; // User model
 import { generateToken } from "../utils/generateToken.js"; // JWT token generator
-
+const ONE_DAY = 24 * 60 * 60;
 // Admin Signup
 
 export const adminSignup = async (req, res) => {
@@ -51,13 +51,12 @@ export const adminLogin = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    console.log(admin); // Optional: debug info
     const token = generateToken(admin);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
+      secure: true, // true in production (HTTPS)
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: ONE_DAY * 1000,
     });
     // Respond with JWT token and admin info
     res.json({

@@ -15,13 +15,12 @@ export default function Login() {
   } = useForm({ mode: "onChange" });
 
   const navigate = useNavigate();
-  const { login, auth } = useAuth(); // ✅ FIXED
+  const { login } = useAuth(); // ✅ FIXED
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {
     try {
       const res = await API.post("/user/login", data);
-      console.log("login function", res.data);
 
       // ✅ JWT is stored in httpOnly cookie
       // ✅ Save auth info using context helper
@@ -31,7 +30,6 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       const code = err.response?.data?.code;
-      console.log(err);
 
       if (code === "EXPIRED") {
         toast.error(err.response.data.message || "Subscription expired");

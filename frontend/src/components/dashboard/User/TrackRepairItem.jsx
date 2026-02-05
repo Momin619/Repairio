@@ -15,7 +15,7 @@ const TrackRepair = () => {
         const { data } = await API.get(`/repairs/track/${token}`);
         setRepair(data);
       } catch (err) {
-        setError("Invalid or expired tracking link");
+        setError("Invalid or expired tracking link", err);
       } finally {
         setLoading(false);
       }
@@ -53,12 +53,14 @@ const TrackRepair = () => {
           <p className="flex items-center justify-between">
             <span className="font-semibold">Status</span>
             <span
-              className={`px-3 py-1 text-sm font-semibold rounded-full capitalize
-                ${
-                  repair.status === "completed"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
+              className={`px-3 py-1 text-xs font-medium rounded-full capitalize
+    ${
+      repair.status === "completed"
+        ? "bg-green-50 text-green-600 border border-green-200"
+        : repair.status === "in-repair"
+          ? "bg-amber-50 text-amber-600 border border-amber-200"
+          : "bg-gray-100 text-gray-600 border border-gray-200"
+    }`}
             >
               {repair.status.replace("-", " ")}
             </span>

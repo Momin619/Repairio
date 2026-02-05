@@ -27,7 +27,6 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, secret);
-    console.log("Decoded JWT:", decoded);
 
     let userFound = null;
 
@@ -39,10 +38,7 @@ export const protect = async (req, res, next) => {
         .select("-password")
         .populate("subscription");
       req.user = userFound;
-      console.log("req.user.subscription: from protect", req.user.subscription);
     }
-
-    console.log("DB result: from protect", userFound);
 
     if (!userFound) {
       return res.status(401).json({ message: "User not found in DB" });
