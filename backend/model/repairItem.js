@@ -11,7 +11,12 @@ const repairItemSchema = new mongoose.Schema(
       phone: { type: String, required: true },
     },
     images: {
-      type: [String], // store image URLs/paths
+      type: [
+        {
+          url: { type: String, required: true },
+          public_id: { type: String, required: true },
+        },
+      ],
       default: [],
     },
     status: {

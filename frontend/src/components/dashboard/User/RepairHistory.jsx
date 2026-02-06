@@ -2,9 +2,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import API from "../../../api/api.js";
 import Loader from "@/components/ui/Loader";
-import { FaWhatsapp, FaSearch } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import debounce from "lodash.debounce";
+import {
+  FaWhatsapp,
+  FaSearch,
+  FaHourglassStart,
+  FaCheckCircle,
+  FaStopwatch,
+} from "react-icons/fa";
+
+const optimizeImage = (url, width = 200) => {
+  if (!url) return "";
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_auto,w_${width},h_${width},c_fill,g_auto/`,
+  );
+};
 
 export default function RepairHistory() {
   const [repairs, setRepairs] = useState([]);
@@ -15,9 +29,8 @@ export default function RepairHistory() {
   const [hasMore, setHasMore] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
 
-  const controllerRef = useRef(null); // track current request
+  const controllerRef = useRef(null);
 
-  // ---------------- FETCH REPAIRS ----------------
   const fetchRepairs = useCallback(
     async (searchTerm = "", pageNum = 1, controller) => {
       try {
@@ -29,12 +42,9 @@ export default function RepairHistory() {
           { signal: controller.signal },
         );
 
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         const fetched = res.data.items || [];
-
         if (pageNum === 1) setRepairs(fetched);
         else setRepairs((prev) => [...prev, ...fetched]);
 
@@ -56,7 +66,6 @@ export default function RepairHistory() {
     [],
   );
 
-  // ---------------- DEBOUNCED SEARCH ----------------
   const debouncedSearchRef = useRef(
     debounce((value, controller) => {
       setPage(1);
@@ -75,7 +84,6 @@ export default function RepairHistory() {
     debouncedSearchRef.current(value, controller);
   };
 
-  // ---------------- LOAD MORE ----------------
   const loadMore = () => {
     if (page >= totalPages) return;
     const nextPage = page + 1;
@@ -88,23 +96,27 @@ export default function RepairHistory() {
     fetchRepairs(search, nextPage, controller);
   };
 
-  // ---------------- INITIAL FETCH ----------------
-  // ---------------- INITIAL FETCH ----------------
   useEffect(() => {
     const controller = new AbortController();
     controllerRef.current = controller;
-
-    // fetch first page on mount
     fetchRepairs("", 1, controller);
 
-    // Capture the current debounced search function
-    const currentDebouncedSearch = debouncedSearchRef.current;
-
     return () => {
-      controller.abort(); // cancel any ongoing fetch
-      currentDebouncedSearch.cancel(); // cancel pending debounced calls
+      controller.abort();
+      debouncedSearchRef.current.cancel();
     };
   }, [fetchRepairs]);
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const optionsDate = { day: "numeric", month: "short", year: "numeric" };
+    const optionsTime = { hour: "numeric", minute: "numeric", hour12: true };
+    return `${date.toLocaleDateString(undefined, optionsDate)} at ${date.toLocaleTimeString(
+      undefined,
+      optionsTime,
+    )}`;
+  };
 
   if (loading && page === 1) return <Loader />;
 
@@ -114,25 +126,16 @@ export default function RepairHistory() {
         Repair History
       </h1>
 
-      {/* Search Bar */}
-      <div className="mb-6">
-        <label htmlFor="repair-search" className="sr-only">
-          Search repairs
-        </label>
-
-        <div className="relative max-w-md mx-auto">
-          <FaSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2 dark:text-gray-500" />
-
-          <input
-            id="repair-search"
-            type="text"
-            placeholder="Search by item name, customer name, or phone"
-            value={search}
-            onChange={handleSearchChange}
-            aria-label="Search repairs"
-            className="w-full px-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:placeholder-gray-500"
-          />
-        </div>
+      {/* Search */}
+      <div className="relative max-w-md mx-auto mb-6">
+        <FaSearch className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2 dark:text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search by item, customer, phone"
+          value={search}
+          onChange={handleSearchChange}
+          className="w-full px-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:placeholder-gray-500"
+        />
       </div>
 
       {repairs.length === 0 ? (
@@ -140,101 +143,122 @@ export default function RepairHistory() {
           No completed repairs found.
         </p>
       ) : (
-        <>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {repairs.map((item) => (
-              <div
-                key={item._id}
-                className="flex flex-col p-4 transition bg-white rounded-lg shadow hover:shadow-lg dark:bg-gray-900"
-              >
-                {item.images?.[0] && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {repairs.map((item) => (
+            <div
+              key={item._id}
+              className="flex flex-col p-4 transition bg-white rounded-lg shadow hover:shadow-lg dark:bg-gray-900"
+            >
+              {/* Image */}
+              <div className="w-full mx-auto mb-4 overflow-hidden rounded max-h-56 sm:max-h-48 md:max-h-56 lg:max-h-64">
+                {item.images?.[0] ? (
                   <img
-                    src={`http://localhost:4500${item.images[0]}`}
+                    src={optimizeImage(item.images[0].url, 200)}
                     alt={item.itemName}
-                    className="object-cover w-full h-40 mb-4 rounded"
+                    className="object-cover w-full h-full transition-transform duration-200 hover:scale-105"
+                    loading="lazy"
+                    srcSet={`
+          ${optimizeImage(item.images[0].url, 150)} 150w,
+          ${optimizeImage(item.images[0].url, 200)} 200w,
+          ${optimizeImage(item.images[0].url, 400)} 400w
+        `}
+                    sizes="(max-width: 640px) 90vw, (max-width: 768px) 45vw, (max-width: 1024px) 33vw, 200px"
                   />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-32 bg-gray-200 rounded dark:bg-gray-700">
+                    <span className="text-gray-500 dark:text-gray-300">
+                      No Image
+                    </span>
+                  </div>
                 )}
-
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                  {item.itemName}
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  Problem: {item.problem}
-                </p>
-
-                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                  <p>
-                    <span className="font-medium">Customer:</span>{" "}
-                    {item.customer?.name}
-                  </p>
-
-                  <p>
-                    <span className="font-medium">Phone:</span>{" "}
-                    {item.customer?.phone || "N/A"}
-                  </p>
-                </div>
-
-                <div className="pt-3 mt-3 text-sm text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
-                  {item.timeTakenValue && (
-                    <p>
-                      ⏱ Time Taken:{" "}
-                      <span className="font-medium text-gray-800 dark:text-gray-200">
-                        {item.timeTakenValue} {item.timeTakenUnit}
-                      </span>
-                    </p>
-                  )}
-
-                  {item.completedDate && item.completedTime && (
-                    <p className="mt-1">
-                      📅 Completed on:{" "}
-                      <span className="font-medium text-gray-800 dark:text-gray-200">
-                        {item.completedDate} at {item.completedTime}
-                      </span>
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3 mt-4">
-                  <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
-                    Completed
-                  </span>
-
-                  {item.whatsappLink ? (
-                    <a
-                      href={item.whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Send WhatsApp"
-                      className="flex items-center justify-center w-10 h-10 text-white transition bg-green-600 rounded-lg hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
-                    >
-                      <FaWhatsapp size={18} />
-                    </a>
-                  ) : (
-                    <button
-                      disabled
-                      className="flex items-center justify-center w-10 h-10 text-white bg-gray-400 rounded-lg cursor-not-allowed"
-                    >
-                      <FaWhatsapp size={18} />
-                    </button>
-                  )}
-                </div>
               </div>
-            ))}
-          </div>
 
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loadingMore ? "Loading..." : "Load More"}
-              </button>
+              {/* Item Info */}
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                {item.itemName}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Problem: {item.problem}
+              </p>
+
+              <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                <p>
+                  <span className="font-medium">Customer:</span>{" "}
+                  {item.customer?.name}
+                </p>
+                <p>
+                  <span className="font-medium">Phone:</span>{" "}
+                  {item.customer?.phone || "N/A"}
+                </p>
+              </div>
+
+              {/* Repair times */}
+              <div className="pt-3 mt-3 space-y-1 text-sm text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
+                {item.startedAt && (
+                  <p className="flex items-center gap-2">
+                    <FaHourglassStart className="text-yellow-500" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      Repair started: {formatDateTime(item.startedAt)}
+                    </span>
+                  </p>
+                )}
+                {item.completedAt && (
+                  <p className="flex items-center gap-2">
+                    <FaCheckCircle className="text-green-500" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      Repair completed: {formatDateTime(item.completedAt)}
+                    </span>
+                  </p>
+                )}
+                {item.duration && (
+                  <p className="flex items-center gap-2">
+                    <FaStopwatch className="text-blue-500" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      Duration: {item.duration}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Status + WhatsApp */}
+              <div className="flex items-center gap-3 mt-4">
+                <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
+                  Completed
+                </span>
+                {item.whatsappLink ? (
+                  <a
+                    href={item.whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Send WhatsApp"
+                    className="flex items-center justify-center w-10 h-10 text-white transition bg-green-600 rounded-lg hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                  >
+                    <FaWhatsapp size={18} />
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="flex items-center justify-center w-10 h-10 text-white bg-gray-400 rounded-lg cursor-not-allowed"
+                  >
+                    <FaWhatsapp size={18} />
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-        </>
+          ))}
+        </div>
+      )}
+
+      {hasMore && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loadingMore ? "Loading..." : "Load More"}
+          </button>
+        </div>
       )}
     </div>
   );

@@ -4,6 +4,8 @@ import { toWhatsAppNumber } from "../utils/phoneNumber.js";
 import mongoose from "mongoose";
 import { checkSubscriptionExpiry } from "../utils/subscription.js";
 import Subscription from "../model/subscription.js";
+
+import { uploadToCloudinary } from "../utils/multer.js";
 // Create a new repair item
 
 export const trackRepairItem = async (req, res) => {
@@ -28,37 +30,50 @@ export const repairItemCreate = async (req, res) => {
   try {
     const { itemName, problem, customer, repairCost } = req.body;
 
-    // Check required fields
+    // Validate required fields
     if (!itemName || !problem || !customer || !repairCost) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Parse customer JSON string into object
+    // Parse customer JSON
     let parsedCustomer;
     try {
       parsedCustomer = JSON.parse(customer);
-    } catch {
+    } catch (error) {
       return res.status(400).json({ message: "Invalid customer data" });
     }
 
-    // Map uploaded files to image paths
-    const images = req.files
-      ? req.files.map((file) => `/uploads/repair-items/${file.filename}`)
-      : [];
+    // Upload image (if provided)
+    let images = [];
 
-    // Create repair item with pending status
+    if (req.file) {
+      const sellerId = req.user._id.toString();
+
+      const result = await uploadToCloudinary(
+        req.file.buffer,
+        `repairio/sellers/${sellerId}/repair-items`,
+      );
+
+      images.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+    }
+
+    // Create repair item
     const repairItem = await RepairItem.create({
       itemName,
       problem,
       repairCost,
       customer: parsedCustomer,
       images,
-      sellerId: req.user._id, // seller is logged-in user
+      sellerId: req.user._id,
       status: "pending",
-      startedAt: null, // explicitly null
-      completedAt: null, // explicitly null
+      startedAt: null,
+      completedAt: null,
     });
 
+    // Generate tracking link
     const trackingLink = `${process.env.FRONTEND_URL}/track/${repairItem.trackingToken}`;
     const customerWhatsApp = toWhatsAppNumber(parsedCustomer.phone);
 
@@ -76,14 +91,14 @@ ${trackingLink}`;
     )}`;
 
     res.status(201).json({
-      message: "Repair item created",
+      message: "Repair item created successfully",
       repairItem,
       trackingLink,
       whatsappLink,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    console.error("Repair Item Create Error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -272,8 +287,8 @@ export const repairItemHistory = async (req, res) => {
       .lean();
 
     const itemsWithExtras = completedItems.map((item) => {
+      // WhatsApp link
       let whatsappLink = null;
-
       if (item.customer?.phone) {
         try {
           const whatsappNumber = toWhatsAppNumber(item.customer.phone);
@@ -284,39 +299,33 @@ export const repairItemHistory = async (req, res) => {
         }
       }
 
-      let timeTakenValue = null;
-      let timeTakenUnit = null;
-
+      // Duration calculation
+      let duration = null;
       if (item.completedAt && item.createdAt) {
         const diffMs = new Date(item.completedAt) - new Date(item.createdAt);
-        const diffMinutes = Math.round(diffMs / (1000 * 60));
-
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
         if (diffMinutes < 60) {
-          timeTakenValue = diffMinutes;
-          timeTakenUnit = "minutes";
+          duration = `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""}`;
         } else {
-          timeTakenValue = Math.round(diffMinutes / 60);
-          timeTakenUnit = "hours";
+          const hours = Math.floor(diffMinutes / 60);
+          const minutes = diffMinutes % 60;
+          duration = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
         }
       }
 
-      const completedDate = item.completedAt
-        ? new Date(item.completedAt).toLocaleDateString()
+      // ISO timestamps for frontend formatting
+      const startedAt = item.createdAt
+        ? new Date(item.createdAt).toISOString()
         : null;
-
-      const completedTime = item.completedAt
-        ? new Date(item.completedAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+      const completedAt = item.completedAt
+        ? new Date(item.completedAt).toISOString()
         : null;
 
       return {
         ...item,
-        timeTakenValue,
-        timeTakenUnit,
-        completedDate,
-        completedTime,
+        startedAt,
+        completedAt,
+        duration,
         whatsappLink,
       };
     });

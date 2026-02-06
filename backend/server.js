@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
 import userRouter from "./routes/user.js";
 import adminRouter from "./routes/admin.js";
 import repairItemRouter from "./routes/repairItem.js";
@@ -8,14 +9,10 @@ import authRouter from "./routes/auth.js";
 import connectDB from "./utils/connectMongodb.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
-dotenv.config();
 
 connectDB();
 
 const app = express();
-
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(
   cors({

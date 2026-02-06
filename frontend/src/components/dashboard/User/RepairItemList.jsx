@@ -1,24 +1,32 @@
-"use client";
-import { useState, useEffect, useCallback, useRef } from "react";
-import RepairItemCard from "./RepairItemCard";
-import API from "../../../api/api";
-import toast from "react-hot-toast";
-import Loader from "@/components/ui/Loader";
-import { FaSearch } from "react-icons/fa";
+import { useState, useRef, useCallback, useEffect } from "react";
+import API from "../../../api/api.js";
 import debounce from "lodash.debounce";
+import { toast } from "react-hot-toast";
+import { FaSearch } from "react-icons/fa";
+import RepairItemCard from "./RepairItemCard.jsx";
+import Loader from "@/components/ui/Loader.jsx";
+
+const optimizeImage = (url, width = 300) => {
+  if (!url) return "";
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_auto,w_${width},h_${width},c_fill,g_auto/`,
+  );
+};
 
 export default function RepairItemList() {
-  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [items, setItems] = useState([]);
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
-  const controllerRef = useRef(null); // track current request
+  const controllerRef = useRef(null);
 
-  // ---------------- FETCH ITEMS ----------------
+  // FETCH ITEMS
   const fetchItems = useCallback(
     async (searchTerm = "", pageNum = 1, controller) => {
       try {
@@ -30,14 +38,16 @@ export default function RepairItemList() {
           { signal: controller.signal },
         );
 
-        if (controller.signal.aborted) return; // stop if aborted
+        if (controller.signal.aborted) return;
 
         const fetchedItems = res.data.items.filter(
           (item) => item.status === "pending" || item.status === "in-repair",
         );
-        if (pageNum === 1) setItems(fetchedItems);
-        else setItems((prev) => [...prev, ...fetchedItems]);
 
+        // Update state
+        setItems(
+          pageNum === 1 ? fetchedItems : (prev) => [...prev, ...fetchedItems],
+        );
         setTotalPages(res.data.totalPages);
         setHasMore(pageNum < res.data.totalPages);
       } catch (err) {
@@ -55,7 +65,7 @@ export default function RepairItemList() {
     [],
   );
 
-  // ---------------- DEBOUNCED SEARCH ----------------
+  // DEBOUNCED SEARCH
   const debouncedSearchRef = useRef(
     debounce((value, controller) => {
       setPage(1);
@@ -67,7 +77,6 @@ export default function RepairItemList() {
     const value = e.target.value;
     setSearch(value);
 
-    // Cancel previous request
     if (controllerRef.current) controllerRef.current.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -75,37 +84,31 @@ export default function RepairItemList() {
     debouncedSearchRef.current(value, controller);
   };
 
-  // ---------------- INITIAL FETCH ----------------
+  // INITIAL FETCH
   useEffect(() => {
     const controller = new AbortController();
     controllerRef.current = controller;
 
     fetchItems("", 1, controller);
 
-    // Capture debouncedSearchRef.current for cleanup
-    const currentDebounced = debouncedSearchRef.current;
-
     return () => {
-      controller.abort(); // cancel ongoing request on unmount
-      currentDebounced.cancel(); // cancel pending debounced calls
+      controller.abort();
+      debouncedSearchRef.current.cancel();
     };
   }, [fetchItems]);
 
-  // ---------------- LOAD MORE ----------------
+  // LOAD MORE
   const loadMore = () => {
     if (page >= totalPages) return;
     const nextPage = page + 1;
     setPage(nextPage);
 
-    // cancel previous request
     if (controllerRef.current) controllerRef.current.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
 
     fetchItems(search, nextPage, controller);
   };
-
-  // ---------------- INITIAL FETCH ----------------
 
   if (loading && page === 1) return <Loader />;
 
@@ -119,7 +122,6 @@ export default function RepairItemList() {
           placeholder="Search by item, customer, or phone"
           value={search}
           onChange={handleSearchChange}
-          aria-label="Search repairs by item name, customer name, or phone"
           className="w-full px-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white dark:placeholder-gray-500"
         />
       </div>
@@ -130,32 +132,39 @@ export default function RepairItemList() {
         </p>
       ) : (
         <>
-          {/* Stacked Full-Width Cards */}
-          {items.map((item) => (
-            <RepairItemCard
-              key={item._id}
-              itemData={item}
-              onStatusChange={(updatedItem) => {
-                // 🔥 REMOVE if completed or deleted
-                if (
-                  updatedItem?.status === "completed" ||
-                  updatedItem?.removed
-                ) {
-                  setItems((prev) =>
-                    prev.filter((i) => i._id !== updatedItem._id),
-                  );
-                  return;
-                }
+          {items.map((item) => {
+            const thumbnailUrl = item.images?.[0]
+              ? optimizeImage(item.images[0].url, 300)
+              : "";
+            const previewUrl = item.images?.[0]
+              ? optimizeImage(item.images[0].url, 1200)
+              : "";
 
-                // 🔄 UPDATE if pending → in-repair
-                setItems((prev) =>
-                  prev.map((i) =>
-                    i._id === updatedItem._id ? updatedItem : i,
-                  ),
-                );
-              }}
-            />
-          ))}
+            return (
+              <RepairItemCard
+                key={item._id}
+                itemData={item}
+                imageUrl={thumbnailUrl}
+                previewUrl={previewUrl}
+                onStatusChange={(updatedItem) => {
+                  if (
+                    updatedItem?.status === "completed" ||
+                    updatedItem?.removed
+                  ) {
+                    setItems((prev) =>
+                      prev.filter((i) => i._id !== updatedItem._id),
+                    );
+                    return;
+                  }
+                  setItems((prev) =>
+                    prev.map((i) =>
+                      i._id === updatedItem._id ? updatedItem : i,
+                    ),
+                  );
+                }}
+              />
+            );
+          })}
 
           {hasMore && (
             <div className="flex justify-center mt-8">

@@ -27,9 +27,9 @@ repairItemRouter.post(
   "/repair-item",
   protect,
   sellerSubscriptionActive,
-  upload.array("images", 5),
+  upload.single("image"), // single image
   repairItemCreate,
-); // Create
+);
 
 repairItemRouter.get(
   "/repair-items",
