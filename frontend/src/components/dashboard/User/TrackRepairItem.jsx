@@ -12,18 +12,16 @@ const TrackRepair = () => {
 
   // Fetch repair data
   const fetchRepair = async () => {
-    console.log("Fetching repair data for token:", token);
     try {
       const { data } = await API.get(`/repairs/track/${token}`);
-      console.log("Fetched repair data:", data);
+
       setRepair(data);
       setError("");
 
       // Stop polling if repair completed
       if (data.status === "completed") stopPolling();
     } catch (err) {
-      console.error("Error fetching repair:", err);
-      setError("Invalid or expired tracking link");
+      setError("Invalid or expired tracking link", err);
       stopPolling();
     } finally {
       setLoading(false);
@@ -35,9 +33,7 @@ const TrackRepair = () => {
     if (repair?.status === "completed") return;
 
     if (!intervalRef.current) {
-      console.log("Starting polling...");
       intervalRef.current = setInterval(() => {
-        console.log("Polling API...");
         fetchRepair();
       }, 5000);
     }
@@ -45,15 +41,12 @@ const TrackRepair = () => {
 
   const stopPolling = () => {
     if (intervalRef.current) {
-      console.log("Stopping polling...");
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
   };
 
   useEffect(() => {
-    console.log("Setting up polling effect");
-
     fetchRepair(); // initial fetch
 
     const handleVisibilityChange = () => {
