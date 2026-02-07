@@ -14,9 +14,11 @@ connectDB();
 
 const app = express();
 
+const BACKEND_URL = process.env.FRONTEND_URL;
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.100.7:5173"],
+    origin: ["http://localhost:5173", "http://192.168.100.7:5173", BACKEND_URL],
     credentials: true,
   }),
 );
