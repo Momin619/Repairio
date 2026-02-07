@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import API from "../../../api/api.js";
-import Loader from "@/components/ui/Loader.jsx";
+import Loader from "../../ui/Loader.jsx";
 
 const TrackRepair = () => {
   const { token } = useParams();

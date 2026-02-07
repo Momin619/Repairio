@@ -1,8 +1,8 @@
 import Admin from "../model/admin.js"; // Admin model
 import bcrypt from "bcryptjs"; // For password hashing and verification
 import User from "../model/user.js"; // User model
-import { generateToken } from "../utils/generateToken.js"; // JWT token generator
-const ONE_DAY = 24 * 60 * 60;
+import { generateToken } from "../utils/generateToken.js";
+const ONE_WEEK = 24 * 60 * 60 * 7;
 // Admin Signup
 
 export const adminSignup = async (req, res) => {
@@ -56,7 +56,7 @@ export const adminLogin = async (req, res) => {
       httpOnly: true,
       secure: true, // true in production (HTTPS)
       sameSite: "lax",
-      maxAge: ONE_DAY * 1000,
+      maxAge: ONE_WEEK * 1000,
     });
     // Respond with JWT token and admin info
     res.json({

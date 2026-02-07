@@ -12,7 +12,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import API from "../../../api/api";
-import Loader from "@/components/ui/Loader";
+import Loader from "../../ui/Loader";
 import toast from "react-hot-toast";
 
 export default function AdminUserDetails() {

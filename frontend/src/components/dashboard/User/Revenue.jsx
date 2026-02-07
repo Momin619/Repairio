@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import API from "../../../api/api.js";
-import Loader from "@/components/ui/Loader.jsx";
+import Loader from "../../ui/Loader";
 import toast from "react-hot-toast";
-import RevenueTable from "@/components/ui/Tabel/RevenueTable.jsx";
+import RevenueTable from "../../ui/Tabel/RevenueTable.jsx";
 
 export default function Revenue() {
   const [monthly, setMonthly] = useState([]);

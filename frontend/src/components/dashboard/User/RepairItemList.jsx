@@ -4,7 +4,7 @@ import debounce from "lodash.debounce";
 import { toast } from "react-hot-toast";
 import { FaSearch } from "react-icons/fa";
 import RepairItemCard from "./RepairItemCard.jsx";
-import Loader from "@/components/ui/Loader.jsx";
+import Loader from "../../ui/Loader.jsx";
 
 const optimizeImage = (url, width = 300) => {
   if (!url) return "";

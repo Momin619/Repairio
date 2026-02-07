@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import API from "../../../api/api.js";
-import Loader from "@/components/ui/Loader";
 import { toast } from "react-hot-toast";
+import Loader from "../../ui/Loader";
 import debounce from "lodash.debounce";
 import {
   FaWhatsapp,

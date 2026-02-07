@@ -4,6 +4,7 @@ import { generateToken } from "../utils/generateToken.js";
 import { checkSubscriptionExpiry } from "../utils/subscription.js";
 // User Signup
 
+const ONE_WEEK = 24 * 60 * 60 * 7;
 export const signup = async (req, res) => {
   try {
     const user = await User.create(req.body);
@@ -72,13 +73,12 @@ export const login = async (req, res) => {
 
     // Refresh populated data
     await user.populate("subscription");
-    const ONE_DAY = 24 * 60 * 60;
     const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
       secure: true, // true in production with HTTPS
       sameSite: "lax",
-      maxAge: ONE_DAY * 1000,
+      maxAge: ONE_WEEK * 1000,
     });
 
     res.json({

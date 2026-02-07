@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import API from "../../../api/api";
 import toast from "react-hot-toast";
-import UsersTable from "@/components/ui/Tabel/UsersTable";
-import Loader from "@/components/ui/Loader";
+import UsersTable from "../../ui/Tabel/UsersTable";
+import Loader from "../../ui/Loader";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
