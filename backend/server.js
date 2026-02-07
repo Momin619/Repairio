@@ -14,28 +14,51 @@ connectDB();
 
 const app = express();
 
-const BACKEND_URL = process.env.FRONTEND_URL;
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://192.168.100.7:5173",
+  process.env.FRONTEND_URL, // MUST be https://www.repairio.online
+];
 
+// 1️⃣ CORS middleware first
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.100.7:5173", BACKEND_URL],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
-app.use(express.json());
+// 2️⃣ Preflight OPTIONS requests
 
+// 3️⃣ Body parser & cookie parser
+app.use(express.json());
 app.use(cookieParser());
 
+// 4️⃣ Routes
 app.use("/api/auth", authRouter);
-
 app.use("/api/user", userRouter);
-
 app.use("/api/admin", adminRouter);
 app.use("/api", repairItemRouter);
 app.use("/api", subscriptionRouter);
-const PORT = process.env.PORT;
 
+// 5️⃣ Error handler for blocked CORS (optional, helpful for logs)
+app.use((err, req, res, next) => {
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ error: "CORS blocked this request" });
+  }
+  next(err);
+});
+
+const PORT = process.env.PORT || 4500;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on http://localhost:${PORT}`),
 );
