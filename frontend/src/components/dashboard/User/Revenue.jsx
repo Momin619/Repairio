@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import API from "../../../api/api.js";
-import Loader from "../../ui/Loader";
+import Loader from "../../ui/Loader.jsx";
 import toast from "react-hot-toast";
 import RevenueTable from "../../ui/Tabel/RevenueTable.jsx";
 
