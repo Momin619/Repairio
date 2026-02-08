@@ -1,13 +1,11 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useContext, useState, useEffect } from "react";
 import API from "../api/api.js";
-
+import { useLocation, useNavigate } from "react-router-dom";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const expiryTimerRef = useRef(null);
-
+  const location = useLocation();
   const [auth, setAuth] = useState({
     isLoggedIn: false,
     role: null,
@@ -48,8 +46,6 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", err);
     }
 
-    clearTimeout(expiryTimerRef.current);
-
     setAuth({
       isLoggedIn: false,
       role: null,
@@ -63,50 +59,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!auth.subscription?.endDate || auth.subscription.status === "expired")
-      return;
+    if (!auth.subscription?.endDate) return;
 
-    const checkExpiry = async () => {
-      const now = Date.now();
-      const end = new Date(auth.subscription.endDate).getTime();
+    const now = Date.now();
+    const end = new Date(auth.subscription.endDate).getTime();
 
-      if (now >= end) {
-        // Update frontend state
-        setAuth((prev) => ({
-          ...prev,
-          subscription: { ...prev.subscription, status: "expired" },
-        }));
+    if (now >= end && auth.subscription.status !== "expired") {
+      setAuth((prev) => ({
+        ...prev,
+        subscription: {
+          ...prev.subscription,
+          status: "expired",
+        },
+      }));
 
-        // Call backend once
-        try {
-          await API.post("/subscription/expire", {
-            subscriptionId: auth.subscription._id,
-          });
-        } catch {
-          // silently fail in production
-        }
-
-        // Stop interval
-        clearInterval(interval);
-
-        // Redirect user
-        navigate("/subscription-expired", { replace: true });
-      }
-    };
-
-    // Run immediately
-    checkExpiry();
-
-    // Run every 10s for testing
-    const interval = setInterval(checkExpiry, 10 * 1000);
-
-    return () => clearInterval(interval);
-  }, [
-    navigate,
-    auth.subscription?._id,
-    auth.subscription?.endDate,
-    auth.subscription?.status,
-  ]);
+      navigate("/subscription-expired", { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   // ---------------- AUTO EXPIRY REDIRECT ----------------
 

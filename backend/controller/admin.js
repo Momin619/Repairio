@@ -4,7 +4,7 @@ import User from "../model/user.js"; // User model
 import { generateToken } from "../utils/generateToken.js";
 const ONE_WEEK = 24 * 60 * 60 * 7;
 // Admin Signup
-
+const NODE_ENV = process.env.NODE_ENV;
 export const adminSignup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -54,8 +54,8 @@ export const adminLogin = async (req, res) => {
     const token = generateToken(admin);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true, // true in production (HTTPS)
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production", // true only in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" for cross-site in prod, "lax" in dev
       maxAge: ONE_WEEK * 1000,
     });
 

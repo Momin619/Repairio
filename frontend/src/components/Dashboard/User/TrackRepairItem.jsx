@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import API from "../../../api/api.js";
 import Loader from "../../ui/Loader.jsx";
 
@@ -7,69 +7,22 @@ const TrackRepair = () => {
   const { token } = useParams();
   const [repair, setRepair] = useState(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const intervalRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch repair data
   const fetchRepair = async () => {
+    setLoading(true);
     try {
       const { data } = await API.get(`/repairs/track/${token}`);
-
       setRepair(data);
       setError("");
-
-      // Stop polling if repair completed
-      if (data.status === "completed") stopPolling();
     } catch (err) {
       setError("Invalid or expired tracking link", err);
-      stopPolling();
     } finally {
       setLoading(false);
     }
   };
 
-  const startPolling = () => {
-    // Don't start polling if repair already completed
-    if (repair?.status === "completed") return;
-
-    if (!intervalRef.current) {
-      intervalRef.current = setInterval(() => {
-        fetchRepair();
-      }, 5000);
-    }
-  };
-
-  const stopPolling = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  useEffect(() => {
-    fetchRepair(); // initial fetch
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") startPolling();
-      else stopPolling();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Start polling immediately if tab is visible
-    if (document.visibilityState === "visible") startPolling();
-
-    return () => {
-      stopPolling();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [token]); // include repair to check status before starting polling
-
-  if (loading) return <Loader />;
-  if (error)
-    return (
-      <p className="mt-20 font-semibold text-center text-red-500">{error}</p>
-    );
+  const isCompleted = repair?.status === "completed";
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 bg-gray-50">
@@ -78,51 +31,68 @@ const TrackRepair = () => {
           Repair Status
         </h2>
 
+        {error && (
+          <p className="mb-4 font-semibold text-center text-red-500">{error}</p>
+        )}
+
         <div className="space-y-3 text-gray-700">
-          <p className="flex justify-between">
-            <span className="font-semibold">Item</span>
-            <span>{repair.itemName}</span>
-          </p>
+          {repair && (
+            <>
+              <p className="flex justify-between">
+                <span className="font-semibold">Item</span>
+                <span>{repair.itemName}</span>
+              </p>
 
-          <p className="flex justify-between">
-            <span className="font-semibold">Customer</span>
-            <span>{repair.customer.name}</span>
-          </p>
+              <p className="flex justify-between">
+                <span className="font-semibold">Customer</span>
+                <span>{repair.customer.name}</span>
+              </p>
 
-          <p className="flex items-center justify-between">
-            <span className="font-semibold">Status</span>
-            <span
-              className={`px-3 py-1 text-xs font-medium rounded-full capitalize
-                ${
-                  repair.status === "completed"
-                    ? "bg-green-50 text-green-600 border border-green-200"
-                    : repair.status === "in-repair"
-                      ? "bg-amber-50 text-amber-600 border border-amber-200"
-                      : "bg-gray-100 text-gray-600 border border-gray-200"
-                }`}
-            >
-              {repair.status.replace("-", " ")}
-            </span>
-          </p>
+              <p className="flex items-center justify-between">
+                <span className="font-semibold">Status</span>
+                <span
+                  className={`px-3 py-1 text-xs font-medium rounded-full capitalize
+                    ${
+                      repair.status === "completed"
+                        ? "bg-green-50 text-green-600 border border-green-200"
+                        : repair.status === "in-repair"
+                          ? "bg-amber-50 text-amber-600 border border-amber-200"
+                          : "bg-gray-100 text-gray-600 border border-gray-200"
+                    }`}
+                >
+                  {repair.status.replace("-", " ")}
+                </span>
+              </p>
 
-          <p className="flex justify-between">
-            <span className="font-semibold">Repair Cost</span>
-            <span className="font-bold text-gray-900">
-              Rs {repair.repairCost}
-            </span>
-          </p>
+              <p className="flex justify-between">
+                <span className="font-semibold">Repair Cost</span>
+                <span className="font-bold text-gray-900">
+                  Rs {repair.repairCost}
+                </span>
+              </p>
 
-          {repair.completedAt && (
-            <p className="flex justify-between">
-              <span className="font-semibold">Completed At</span>
-              <span>{new Date(repair.completedAt).toLocaleDateString()}</span>
-            </p>
+              {repair.completedAt && (
+                <p className="flex justify-between">
+                  <span className="font-semibold">Completed At</span>
+                  <span>
+                    {new Date(repair.completedAt).toLocaleDateString()}
+                  </span>
+                </p>
+              )}
+            </>
           )}
         </div>
 
-        <div className="mt-6 text-sm text-center text-gray-500">
-          Thank you for choosing our service
-        </div>
+        {/* Button to fetch status */}
+        {!isCompleted && (
+          <button
+            onClick={fetchRepair}
+            disabled={loading}
+            className="w-full px-4 py-2 mt-6 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Fetching..." : "View Status"}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,6 @@ import API from "../../../api/api";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
-
 export default function AdminLogin() {
   const {
     register,
