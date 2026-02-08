@@ -32,7 +32,7 @@ app.use(
       }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
@@ -42,7 +42,14 @@ app.use(
 // 3️⃣ Body parser & cookie parser
 app.use(express.json());
 app.use(cookieParser());
-
+app.use((req, res, next) => {
+  console.log("---- Incoming Request ----");
+  console.log("Origin:", req.headers.origin);
+  console.log("Raw Cookie Header:", req.headers.cookie);
+  console.log("Parsed Cookies:", req.cookies);
+  console.log("--------------------------");
+  next();
+});
 // 4️⃣ Routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);

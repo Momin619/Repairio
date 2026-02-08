@@ -112,32 +112,21 @@ export const AuthProvider = ({ children }) => {
 
   // ---------------- FETCH AUTH ON LOAD ----------------
   useEffect(() => {
-    let isMounted = true; // flag to track if component is still mounted
+    if (auth.isLoggedIn) return; // already logged in, no need to fetch
 
     const fetchAuth = async () => {
       try {
         const res = await API.get("/auth/me");
-        if (isMounted && res.data) {
-          login(res.data); // only call login if still mounted
-        }
+        if (res.data) login(res.data);
       } catch (err) {
-        if (isMounted) {
-          console.error("Auth fetch failed:", err);
-        }
+        console.error("Auth fetch failed:", err);
       } finally {
-        if (isMounted) {
-          setLoading(false); // only update state if mounted
-        }
+        setLoading(false);
       }
     };
 
     fetchAuth();
-
-    // cleanup function runs on unmount
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  }, [auth.isLoggedIn]);
 
   return (
     <AuthContext.Provider value={{ auth, login, logout, loading }}>

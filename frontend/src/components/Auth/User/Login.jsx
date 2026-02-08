@@ -20,10 +20,13 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post("/user/login", data);
+      await API.post("/user/login", data); // sets cookie
 
-      // ✅ JWT is stored in httpOnly cookie
-      // ✅ Save auth info using context helper
+      // small delay ensures cookie is written (50ms)
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // now fetch auth
+      const res = await API.get("/auth/me");
       login(res.data);
 
       toast.success("Login successful!");

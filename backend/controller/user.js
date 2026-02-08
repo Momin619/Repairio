@@ -77,7 +77,7 @@ export const login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true, // true in production with HTTPS
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: ONE_WEEK * 1000,
     });
 

@@ -6,12 +6,22 @@ import Admin from "../model/admin.js";
 // Ensures the request has a valid JWT and attaches the user/admin to req
 
 export const protect = async (req, res, next) => {
-  let token = req.cookies.token;
+  console.log("---- PROTECT MIDDLEWARE ----");
+  console.log("Route:", req.originalUrl);
+  console.log("Cookies:", req.cookies);
+  console.log("Raw header:", req.headers.cookie);
 
-  if (!token) return res.status(401).json({ message: "No token" });
+  let token = req.cookies?.token;
+
+  if (!token) {
+    console.log("❌ No token for route:", req.originalUrl);
+    return res.status(401).json({ message: "No token" });
+  }
 
   try {
     const decodedUnverified = jwt.decode(token);
+    console.log("Decoded (unverified):", decodedUnverified);
+
     if (!decodedUnverified) throw new Error("Invalid token");
 
     let secret;
@@ -27,6 +37,7 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, secret);
+    console.log("Verified token:", decoded);
 
     let userFound = null;
 
@@ -41,13 +52,16 @@ export const protect = async (req, res, next) => {
     }
 
     if (!userFound) {
+      console.log("❌ User not found in DB");
       return res.status(401).json({ message: "User not found in DB" });
     }
 
     req.role = decoded.role;
+
+    console.log("✅ Auth success for route:", req.originalUrl);
     next();
   } catch (err) {
-    console.error(err);
+    console.error("❌ Token verification failed:", err.message);
     return res.status(401).json({ message: "Token invalid or expired" });
   }
 };

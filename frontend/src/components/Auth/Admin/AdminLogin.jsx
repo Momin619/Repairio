@@ -18,9 +18,10 @@ export default function AdminLogin() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post("/admin/login", data);
+      await API.post("/admin/login", data);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const res = await API.get("/auth/me");
       login(res.data);
-      toast.success("Admin login successful!");
       navigate("/admin/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
