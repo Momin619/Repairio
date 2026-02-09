@@ -6,7 +6,7 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-
+import Cookies from "js-cookie";
 export default function Login() {
   const {
     register,
@@ -20,20 +20,25 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     try {
-      await API.post("/user/login", data); // sets cookie
+      // ✅ Send login request
+      const res = await API.post("/user/login", data);
 
-      // small delay ensures cookie is written (50ms)
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // ✅ Set token in cookie from backend response
+      if (res.data.token) {
+        Cookies.set("token", res.data.token, {
+          expires: 7, // 7 days
+          secure: true, // HTTPS only in production
+          sameSite: "Strict", // adjust based on your frontend/backend domains
+        });
+      }
 
-      // now fetch auth
-      const res = await API.get("/auth/me");
+      // ✅ Update auth context
       login(res.data);
 
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       const code = err.response?.data?.code;
-
       if (code === "EXPIRED") {
         toast.error(err.response.data.message || "Subscription expired");
         navigate("/subscription-expired");

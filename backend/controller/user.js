@@ -74,14 +74,9 @@ export const login = async (req, res) => {
     // Refresh populated data
     await user.populate("subscription");
     const token = generateToken(user);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // true only in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" for cross-site in prod, "lax" in dev
-      maxAge: ONE_WEEK * 1000,
-    });
 
     res.json({
+      token,
       role: user.role,
       userId: user._id,
       isLoggedIn: true,

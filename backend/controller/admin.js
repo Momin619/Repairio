@@ -52,15 +52,10 @@ export const adminLogin = async (req, res) => {
     }
 
     const token = generateToken(admin);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // true only in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" for cross-site in prod, "lax" in dev
-      maxAge: ONE_WEEK * 1000,
-    });
 
     // Respond with JWT token and admin info
     res.json({
+      token,
       role: "admin",
       userId: admin._id,
       isLoggedIn: true,

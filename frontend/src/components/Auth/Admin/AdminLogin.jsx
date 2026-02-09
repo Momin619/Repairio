@@ -5,6 +5,8 @@ import API from "../../../api/api";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
+import Cookies from "js-cookie";
+
 export default function AdminLogin() {
   const {
     register,
@@ -17,16 +19,24 @@ export default function AdminLogin() {
 
   const onSubmit = async (data) => {
     try {
-      await API.post("/admin/login", data);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const res = await API.get("/auth/me");
+      const res = await API.post("/admin/login", data);
+
+      // ✅ Set token from backend response
+      if (res.data.token) {
+        Cookies.set("token", res.data.token, {
+          expires: 7,
+          secure: true,
+          sameSite: "Strict",
+        });
+      }
+
       login(res.data);
+      toast.success("Login successful!");
       navigate("/admin/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
     }
   };
-
   return (
     <div className="flex items-center justify-center min-h-[100dvh] px-4 bg-gray-100 dark:bg-black">
       {/* Card */}

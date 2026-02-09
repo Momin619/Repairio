@@ -7,20 +7,21 @@ import Admin from "../model/admin.js";
 
 export const protect = async (req, res, next) => {
   console.log("---- PROTECT MIDDLEWARE ----");
-  console.log("Route:", req.originalUrl);
-  console.log("Cookies:", req.cookies);
-  console.log("Raw header:", req.headers.cookie);
 
+  // 1️⃣ Try to get token from cookie first
   let token = req.cookies?.token;
 
+  // 2️⃣ Fallback: get token from Authorization header (if frontend sets it manually)
+  if (!token && req.headers.authorization?.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
   if (!token) {
-    console.log("❌ No token for route:", req.originalUrl);
-    return res.status(401).json({ message: "No token" });
+    return res.status(401).json({ message: "No token provided" });
   }
 
   try {
     const decodedUnverified = jwt.decode(token);
-    console.log("Decoded (unverified):", decodedUnverified);
 
     if (!decodedUnverified) throw new Error("Invalid token");
 
@@ -37,10 +38,8 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, secret);
-    console.log("Verified token:", decoded);
 
     let userFound = null;
-
     if (decoded.role === "admin") {
       userFound = await Admin.findById(decoded.id).select("-password");
       req.admin = userFound;
@@ -52,16 +51,12 @@ export const protect = async (req, res, next) => {
     }
 
     if (!userFound) {
-      console.log("❌ User not found in DB");
       return res.status(401).json({ message: "User not found in DB" });
     }
 
     req.role = decoded.role;
-
-    console.log("✅ Auth success for route:", req.originalUrl);
     next();
   } catch (err) {
-    console.error("❌ Token verification failed:", err.message);
     return res.status(401).json({ message: "Token invalid or expired" });
   }
 };
