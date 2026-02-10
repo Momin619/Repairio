@@ -64,7 +64,10 @@ export const AuthProvider = ({ children }) => {
     const now = Date.now();
     const end = new Date(auth.subscription.endDate).getTime();
 
+    // check if subscription is expired
     if (now >= end && auth.subscription.status !== "expired") {
+      console.log("Subscription expired - updating context and redirecting");
+
       setAuth((prev) => ({
         ...prev,
         subscription: {
@@ -75,13 +78,13 @@ export const AuthProvider = ({ children }) => {
 
       navigate("/subscription-expired", { replace: true });
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate]); // remove auth.subscription from dependencies
 
   // ---------------- AUTO EXPIRY REDIRECT ----------------
 
   // ---------------- FETCH AUTH ON LOAD ----------------
   useEffect(() => {
-    if (auth.isLoggedIn) return; // already logged in, no need to fetch
+    // already logged in, no need to fetch
 
     const fetchAuth = async () => {
       try {
@@ -95,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     fetchAuth();
-  }, [auth.isLoggedIn]);
+  }, [location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ auth, login, logout, loading }}>

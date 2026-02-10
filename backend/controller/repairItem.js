@@ -81,6 +81,7 @@ export const repairItemCreate = async (req, res) => {
 Your repair item has been registered.
 
 Item: ${itemName}
+Cost: ${repairCost}
 Status: Pending
 
 Track your repair here:
