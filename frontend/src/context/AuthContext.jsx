@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import API from "../api/api.js";
 import { useLocation, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -53,6 +54,7 @@ export const AuthProvider = ({ children }) => {
       subscription: null,
     });
 
+    Cookies.remove("token");
     navigate(role === "admin" ? "/admin/login" : "/login", {
       replace: true,
     });
